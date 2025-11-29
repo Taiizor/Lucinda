@@ -1,0 +1,90 @@
+name: 📚 Documentation Issue
+description: Report missing, incorrect, or unclear documentation
+title: "[Docs]: "
+labels: ["documentation", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Documentation Issue
+        Help us improve Lucinda's documentation by reporting issues or suggesting improvements.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation is affected?
+      options:
+        - README
+        - XML Documentation (IntelliSense)
+        - Code Comments
+        - Sample Code
+        - API Reference
+        - Getting Started Guide
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing Documentation
+        - Incorrect Information
+        - Unclear/Confusing
+        - Outdated
+        - Typo/Grammar
+        - Missing Example
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Where is the documentation issue located?
+      placeholder: |
+        - File: src/Lucinda/EndToEndEncryption.cs
+        - Method: EncryptMessage
+        - Or URL: https://github.com/Taiizor/Lucinda#usage
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Documentation
+      description: What does the current documentation say (if applicable)?
+      placeholder: Copy/paste the current documentation text...
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested Improvement
+      description: What would you like the documentation to say?
+      placeholder: Describe your suggested improvement or provide the corrected text...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the documentation issue.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this hasn't been reported before
+          required: true

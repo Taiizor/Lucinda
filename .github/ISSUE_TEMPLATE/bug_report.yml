@@ -1,0 +1,155 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in Lucinda
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for reporting a bug!
+        Please fill out the sections below to help us understand and reproduce the issue.
+        
+        ⚠️ **Security vulnerabilities should NOT be reported here.** Please use the [Security tab](https://github.com/Taiizor/Lucinda/security) to report them privately.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Create an instance of '...'
+        2. Call method '...' with parameters '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear description of what you expected to happen.
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A clear description of what actually happened.
+      placeholder: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: Please provide a minimal code sample that reproduces the issue.
+      render: csharp
+      placeholder: |
+        using Lucinda;
+        
+        var e2ee = new EndToEndEncryption();
+        // Your code here...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which component of Lucinda is affected?
+      options:
+        - Symmetric Encryption (AES-GCM/AES-CBC)
+        - Asymmetric Encryption (RSA)
+        - Hybrid Encryption (RSA+AES)
+        - Key Derivation (PBKDF2/HKDF)
+        - Key Exchange (ECDH)
+        - Digital Signatures (ECDSA/RSA-PSS)
+        - Key Storage
+        - EndToEndEncryption API
+        - Utilities (Hashing/HMAC)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-framework
+    attributes:
+      label: Target Framework
+      description: Which .NET target framework are you using?
+      options:
+        - .NET 10.0
+        - .NET 9.0
+        - .NET 8.0
+        - .NET 7.0
+        - .NET 6.0
+        - .NET Standard 2.1
+        - .NET Standard 2.0
+        - .NET Framework 4.8.1
+        - .NET Framework 4.8
+        - Multiple
+    validations:
+      required: true
+
+  - type: input
+    id: lucinda-version
+    attributes:
+      label: Lucinda Version
+      description: What version of Lucinda are you using?
+      placeholder: "e.g., 1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: "e.g., Windows 11, Ubuntu 22.04, macOS Sonoma"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Exception/Stack Trace
+      description: If applicable, paste the full exception message and stack trace.
+      render: text
+      placeholder: |
+        System.Exception: Error message here
+           at Lucinda.ClassName.MethodName() in ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, related issues, etc.).
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported before
+          required: true
+        - label: I have read the documentation and this is not a usage question
+          required: true
+        - label: This is NOT a security vulnerability (those should be reported privately)
+          required: true

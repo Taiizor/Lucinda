@@ -1,0 +1,155 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net48;net481;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+        <DefaultLanguage>en-GB</DefaultLanguage>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>Lucinda</RootNamespace>
+        <AssemblyName>Lucinda</AssemblyName>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <ApplicationIcon>Resources\Lucinda.ico</ApplicationIcon>
+        <Version>1.0.6</Version>
+        <AssemblyVersion>$(Version)</AssemblyVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Lucinda</Title>
+        <PackageId>Lucinda</PackageId>
+        <Authors>Lucinda Contributors</Authors>
+        <Product>Lucinda</Product>
+        <Copyright>Copyright © $([System.DateTime]::Today.ToString(yyyy)) $(Authors)</Copyright>
+        <Summary>Lucinda is a high-performance, AOT-compatible end-to-end encryption (E2EE) library for .NET. Features AES-GCM/CBC symmetric encryption, RSA asymmetric encryption, RSA+AES hybrid encryption, ECDH key exchange, RSA/ECDSA digital signatures, PBKDF2/HKDF key derivation, and secure key management with modern cryptographic best practices.</Summary>
+        <Description>Lucinda is a comprehensive, production-ready end-to-end encryption (E2EE) library for .NET applications.
+
+Key Features:
+• Symmetric Encryption: AES-GCM (authenticated) and AES-CBC with HMAC, supporting 128/192/256-bit keys
+• Asymmetric Encryption: RSA with OAEP padding (2048/3072/4096-bit keys)
+• Hybrid Encryption: RSA + AES-GCM for efficient large data encryption
+• Key Exchange: ECDH (Elliptic Curve Diffie-Hellman) with P-256/P-384/P-521 curves
+• Digital Signatures: RSA (PSS/PKCS#1 v1.5) and ECDSA for message authentication
+• Key Derivation: PBKDF2 (password-based) and HKDF (HMAC-based) functions
+• Secure Key Storage: In-memory storage with automatic secure clearing
+
+AOT Compatible: Full Native AOT support for .NET 7.0+
+Thread-Safe: All operations are designed for concurrent use
+Platform Support: .NET 6.0-10.0, .NET Standard 2.0/2.1, .NET Framework 4.8/4.8.1
+Result Pattern: CryptoResult&lt;T&gt; for explicit error handling without exceptions</Description>
+        <PackageReadmeFile>README.MD</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression></PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageTags>encryption;cryptography;e2ee;end-to-end-encryption;security;aes;aes-gcm;aes-cbc;rsa;rsa-oaep;ecdh;ecdsa;pbkdf2;hkdf;hybrid-encryption;key-exchange;digital-signature;key-derivation;secure-storage;dotnet;csharp;aot;native-aot;cross-platform</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!--<DocumentationFile>..\$(Title)\bin$(OutputPath)\$(Configuration)\$(TargetFramework)\$(Title).xml</DocumentationFile>-->
+        <PackageProjectUrl>https://github.com/Taiizor/Lucinda</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>git://github.com/Taiizor/Lucinda</RepositoryUrl>
+        <PackageDescription>$(Description)</PackageDescription>
+        <PackageIcon>Lucinda.png</PackageIcon>
+        <Company>$(Authors)</Company>
+        <Owners>$(Authors)</Owners>
+        <LangVersion>preview</LangVersion>
+        <AnalysisLevel>preview</AnalysisLevel>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <NeutralLanguage>$(DefaultLanguage)</NeutralLanguage>
+        <FileVersion>$(Version)</FileVersion>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Configurations>Debug;Release</Configurations>
+        <NoWarn>$(NoWarn);CS8002</NoWarn>
+        <WarningsAsErrors>CS1591</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    </PropertyGroup>
+
+    <!-- AOT Support for .NET 7.0+ -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">
+        <EnableAotAnalyzer Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">true</EnableAotAnalyzer>
+        <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+        <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+        <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
+        <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+        <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <IsAotCompatible>true</IsAotCompatible>
+        <IlcTrimMetadata>true</IlcTrimMetadata>
+        <IsTrimmable>true</IsTrimmable>
+        <TrimMode>link</TrimMode>
+    </PropertyGroup>
+
+    <!-- Source Link for debugging -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub">
+            <Version>8.0.0</Version>
+            <PrivateAssets>All</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <!-- Conditional compilation symbols -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+        <Nullable>annotations</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);NETFRAMEWORK;NET48</DefineConstants>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net481'">
+        <Nullable>annotations</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);NETFRAMEWORK;NET481</DefineConstants>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <Nullable>annotations</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+        <Nullable>annotations</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_1</DefineConstants>
+    </PropertyGroup>
+
+    <!-- Package references for older frameworks -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+        <PackageReference Include="System.Memory" Version="4.6.3" />
+        <PackageReference Include="System.Buffers" Version="4.6.1" />
+    </ItemGroup>
+
+    <!-- Nullable reference types support for older frameworks -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+        <PackageReference Include="Nullable" Version="1.3.1" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- Package content -->
+    <ItemGroup>
+        <None Include="README.MD">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+        <None Include="..\..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+        <None Include="Resources\Lucinda.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Lucinda.Tests" />
+        <InternalsVisibleTo Include="Lucinda.Benchmarks" />
+    </ItemGroup>
+
+</Project>

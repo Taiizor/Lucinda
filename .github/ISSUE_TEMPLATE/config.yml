@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Security Vulnerability
+    url: https://github.com/Taiizor/Lucinda/security
+    about: Report security vulnerabilities privately via GitHub's security features
+  - name: 📖 Documentation
+    url: https://github.com/Taiizor/Lucinda#readme
+    about: Check out the README for usage examples and API documentation
+  - name: 💬 Discussions
+    url: https://github.com/Taiizor/Lucinda/discussions
+    about: Ask questions and discuss ideas with the community

@@ -1,0 +1,84 @@
+name: 🔒 Security Concern
+description: Report a potential security issue or request a security-related enhancement (NOT for vulnerabilities)
+title: "[Security]: "
+labels: ["security", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Security Concern
+        
+        ⚠️ **IMPORTANT: Do NOT use this template for reporting security vulnerabilities!**
+        
+        Security vulnerabilities should be reported privately:
+        1. Go to [Security tab](https://github.com/Taiizor/Lucinda/security)
+        2. Click "Report a vulnerability" (if available)
+        3. Or contact the maintainers directly via the repository's security policy
+        
+        This template is for:
+        - Security-related feature requests
+        - Questions about cryptographic best practices
+        - Discussions about algorithm choices
+        - Compliance-related questions
+
+  - type: dropdown
+    id: concern-type
+    attributes:
+      label: Type of Concern
+      description: What type of security concern is this?
+      options:
+        - Algorithm Selection Question
+        - Key Size Recommendation
+        - Best Practices Question
+        - Compliance Question (FIPS, etc.)
+        - Security Enhancement Request
+        - Cryptographic Review Request
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe your security concern or question in detail.
+      placeholder: Provide a clear description of your concern...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context about your use case or environment.
+      placeholder: |
+        - What are you trying to achieve?
+        - What compliance requirements do you need to meet?
+        - What threat model are you considering?
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Include any relevant references, standards, or documentation.
+      placeholder: |
+        - NIST guidelines
+        - RFC documents
+        - Academic papers
+        - Industry standards
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: This is NOT a security vulnerability report (vulnerabilities must be reported privately)
+          required: true
+        - label: I understand that sensitive security details should not be shared publicly
+          required: true
