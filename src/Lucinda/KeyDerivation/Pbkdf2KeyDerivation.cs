@@ -35,7 +35,11 @@ namespace Lucinda.KeyDerivation
     /// </list>
     /// </para>
     /// </remarks>
-    public sealed class Pbkdf2KeyDerivation : IKeyDerivation
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="Pbkdf2KeyDerivation"/> class.
+    /// </remarks>
+    /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
+    public sealed class Pbkdf2KeyDerivation(HashAlgorithmName? hashAlgorithm = null) : IKeyDerivation
     {
         /// <summary>
         /// The minimum recommended number of iterations.
@@ -52,17 +56,8 @@ namespace Lucinda.KeyDerivation
         /// </summary>
         public const int DefaultSaltLength = 32;
 
-        private readonly HashAlgorithmName _hashAlgorithm;
+        private readonly HashAlgorithmName _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;
         private bool _disposed;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Pbkdf2KeyDerivation"/> class.
-        /// </summary>
-        /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
-        public Pbkdf2KeyDerivation(HashAlgorithmName? hashAlgorithm = null)
-        {
-            _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;
-        }
 
         /// <inheritdoc/>
         public string AlgorithmName => $"PBKDF2-{_hashAlgorithm.Name}";
@@ -257,10 +252,14 @@ namespace Lucinda.KeyDerivation
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(Pbkdf2KeyDerivation));
             }
+#endif
         }
     }
 }
