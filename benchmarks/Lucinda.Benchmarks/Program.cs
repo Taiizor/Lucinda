@@ -39,7 +39,8 @@ namespace Lucinda.Benchmarks
             Console.WriteLine("  4. Digital Signatures (ECDSA, RSA-PSS)");
             Console.WriteLine("  5. End-to-End Encryption (High-level API)");
             Console.WriteLine("  6. Utility Operations (Hashing, HMAC, Random)");
-            Console.WriteLine("  7. All Benchmarks");
+            Console.WriteLine("  7. Secure Messaging (X3DH, Double Ratchet)");
+            Console.WriteLine("  8. All Benchmarks");
             Console.WriteLine();
 
             if (args.Length > 0)
@@ -50,13 +51,13 @@ namespace Lucinda.Benchmarks
             else
             {
                 // Interactive mode
-                Console.Write("Select benchmark suite (1-7): ");
+                Console.Write("Select benchmark suite (1-8): ");
                 string? input = Console.ReadLine();
 
                 if (string.IsNullOrEmpty(input))
                 {
                     Console.WriteLine("No selection made. Running all benchmarks...");
-                    input = "7";
+                    input = "8";
                 }
 
                 RunBenchmark(input, config);
@@ -113,6 +114,14 @@ namespace Lucinda.Benchmarks
                     break;
 
                 case "7":
+                case "secure":
+                case "messaging":
+                case "signal":
+                    Console.WriteLine("\nRunning Secure Messaging Benchmarks...\n");
+                    BenchmarkRunner.Run<SecureMessagingBenchmarks>(config);
+                    break;
+
+                case "8":
                 case "all":
                 default:
                     Console.WriteLine("\nRunning All Benchmarks...\n");
@@ -123,7 +132,8 @@ namespace Lucinda.Benchmarks
                         typeof(KeyDerivationBenchmarks),
                         typeof(SignatureBenchmarks),
                         typeof(EndToEndEncryptionBenchmarks),
-                        typeof(UtilityBenchmarks)
+                        typeof(UtilityBenchmarks),
+                        typeof(SecureMessagingBenchmarks)
                     ], config);
                     break;
             }
