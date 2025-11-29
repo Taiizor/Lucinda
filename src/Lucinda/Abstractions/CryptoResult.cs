@@ -111,15 +111,23 @@ namespace Lucinda.Abstractions
         /// <returns>The result of the executed function.</returns>
         public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<string, TResult> onFailure)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(onSuccess);
+#else
             if (onSuccess == null)
             {
                 throw new ArgumentNullException(nameof(onSuccess));
             }
+#endif
 
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(onFailure);
+#else
             if (onFailure == null)
             {
                 throw new ArgumentNullException(nameof(onFailure));
             }
+#endif
 
             return IsSuccess ? onSuccess(_value!) : onFailure(_error!);
         }

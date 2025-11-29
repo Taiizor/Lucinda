@@ -20,33 +20,27 @@ namespace Lucinda.Abstractions
     /// <item><description>Any additional metadata required for decryption</description></item>
     /// </list>
     /// </remarks>
-    public sealed class HybridEncryptedData
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="HybridEncryptedData"/> class.
+    /// </remarks>
+    /// <param name="encapsulatedKey">The asymmetrically encrypted symmetric key.</param>
+    /// <param name="ciphertext">The symmetrically encrypted data (including IV/nonce and tag).</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="encapsulatedKey"/> or <paramref name="ciphertext"/> is null.
+    /// </exception>
+    public sealed class HybridEncryptedData(byte[] encapsulatedKey, byte[] ciphertext)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HybridEncryptedData"/> class.
-        /// </summary>
-        /// <param name="encapsulatedKey">The asymmetrically encrypted symmetric key.</param>
-        /// <param name="ciphertext">The symmetrically encrypted data (including IV/nonce and tag).</param>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="encapsulatedKey"/> or <paramref name="ciphertext"/> is null.
-        /// </exception>
-        public HybridEncryptedData(byte[] encapsulatedKey, byte[] ciphertext)
-        {
-            EncapsulatedKey = encapsulatedKey ?? throw new ArgumentNullException(nameof(encapsulatedKey));
-            Ciphertext = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
-        }
-
         /// <summary>
         /// Gets the encapsulated (asymmetrically encrypted) symmetric key.
         /// </summary>
         /// <value>The encrypted symmetric key bytes.</value>
-        public byte[] EncapsulatedKey { get; }
+        public byte[] EncapsulatedKey { get; } = encapsulatedKey ?? throw new ArgumentNullException(nameof(encapsulatedKey));
 
         /// <summary>
         /// Gets the symmetrically encrypted ciphertext.
         /// </summary>
         /// <value>The encrypted data bytes (including IV/nonce and authentication tag).</value>
-        public byte[] Ciphertext { get; }
+        public byte[] Ciphertext { get; } = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
 
         /// <summary>
         /// Gets or sets the version identifier for the encryption format.

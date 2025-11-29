@@ -17,25 +17,19 @@ namespace Lucinda.Abstractions
     /// Implements <see cref="IDisposable"/> to ensure secure cleanup of sensitive key material.
     /// The private key data is cleared from memory when the object is disposed.
     /// </remarks>
-    public sealed class AsymmetricKeyPair : IDisposable
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="AsymmetricKeyPair"/> class.
+    /// </remarks>
+    /// <param name="publicKey">The public key bytes.</param>
+    /// <param name="privateKey">The private key bytes.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="publicKey"/> or <paramref name="privateKey"/> is null.
+    /// </exception>
+    public sealed class AsymmetricKeyPair(byte[] publicKey, byte[] privateKey) : IDisposable
     {
-        private byte[] _privateKey;
-        private byte[] _publicKey;
+        private byte[] _privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
+        private byte[] _publicKey = publicKey ?? throw new ArgumentNullException(nameof(publicKey));
         private bool _disposed;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AsymmetricKeyPair"/> class.
-        /// </summary>
-        /// <param name="publicKey">The public key bytes.</param>
-        /// <param name="privateKey">The private key bytes.</param>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="publicKey"/> or <paramref name="privateKey"/> is null.
-        /// </exception>
-        public AsymmetricKeyPair(byte[] publicKey, byte[] privateKey)
-        {
-            _publicKey = publicKey ?? throw new ArgumentNullException(nameof(publicKey));
-            _privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
-        }
 
         /// <summary>
         /// Gets a copy of the public key bytes.
@@ -100,14 +94,14 @@ namespace Lucinda.Abstractions
             if (_privateKey != null)
             {
                 Array.Clear(_privateKey, 0, _privateKey.Length);
-                _privateKey = Array.Empty<byte>();
+                _privateKey = [];
             }
 
             // Clear public key
             if (_publicKey != null)
             {
                 Array.Clear(_publicKey, 0, _publicKey.Length);
-                _publicKey = Array.Empty<byte>();
+                _publicKey = [];
             }
 
             _disposed = true;
@@ -115,10 +109,14 @@ namespace Lucinda.Abstractions
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(AsymmetricKeyPair));
             }
+#endif
         }
     }
 }
