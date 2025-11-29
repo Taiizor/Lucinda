@@ -56,7 +56,7 @@ When reporting a vulnerability, please include:
 
 ### Example Report Format
 
-```
+```markdown
 ## Summary
 [Brief description of the vulnerability]
 
@@ -82,9 +82,9 @@ When reporting a vulnerability, please include:
 3. [...]
 
 ## Proof of Concept
-```csharp
+`csharp
 // Code demonstrating the vulnerability
-```
+`
 
 ## Suggested Fix
 [If applicable]
