@@ -40,7 +40,7 @@ Result Pattern: CryptoResult&lt;T&gt; for explicit error handling without except
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageLicenseExpression></PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <PackageTags>encryption;cryptography;e2ee;end-to-end-encryption;security;aes;aes-gcm;aes-cbc;rsa;rsa-oaep;ecdh;ecdsa;pbkdf2;hkdf;hybrid-encryption;key-exchange;digital-signature;key-derivation;secure-storage;dotnet;csharp;aot;native-aot;cross-platform</PackageTags>
+        <PackageTags>encryption;cryptography;e2ee;end-to-end-encryption;security;aes;aes-gcm;aes-cbc;rsa;rsa-oaep;ecdh;ecdsa;pbkdf2;hkdf;hybrid-encryption;key-exchange;digital-signature;key-derivation;secure-storage;dotnet;csharp;aot;native-aot;cross-platform;lucinda</PackageTags>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <!--<DocumentationFile>..\$(Title)\bin$(OutputPath)\$(Configuration)\$(TargetFramework)\$(Title).xml</DocumentationFile>-->
         <PackageProjectUrl>https://github.com/Taiizor/Lucinda</PackageProjectUrl>

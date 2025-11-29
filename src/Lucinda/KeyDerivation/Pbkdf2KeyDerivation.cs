@@ -98,7 +98,7 @@ namespace Lucinda.KeyDerivation
                     derivedKeyLength);
 #elif NETCOREAPP || NETSTANDARD2_1
                 byte[] derivedKey;
-                using (var pbkdf2 = new Rfc2898DeriveBytes(
+                using (Rfc2898DeriveBytes pbkdf2 = new(
                     Encoding.UTF8.GetBytes(password),
                     salt,
                     iterations,
@@ -110,7 +110,7 @@ namespace Lucinda.KeyDerivation
                 byte[] derivedKey;
                 // .NET Standard 2.0 doesn't support HashAlgorithmName in Rfc2898DeriveBytes
                 // Use SHA1 by default (the only option available)
-                using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations))
+                using (Rfc2898DeriveBytes pbkdf2 = new(password, salt, iterations))
                 {
                     derivedKey = pbkdf2.GetBytes(derivedKeyLength);
                 }
@@ -159,7 +159,7 @@ namespace Lucinda.KeyDerivation
                     derivedKeyLength);
 #elif NETCOREAPP || NETSTANDARD2_1
                 byte[] derivedKey;
-                using (var pbkdf2 = new Rfc2898DeriveBytes(
+                using (Rfc2898DeriveBytes pbkdf2 = new(
                     inputKeyMaterial,
                     effectiveSalt,
                     DefaultIterations,
@@ -170,7 +170,7 @@ namespace Lucinda.KeyDerivation
 #else
                 byte[] derivedKey;
                 // .NET Standard 2.0 doesn't support HashAlgorithmName in Rfc2898DeriveBytes
-                using (var pbkdf2 = new Rfc2898DeriveBytes(inputKeyMaterial, effectiveSalt, DefaultIterations))
+                using (Rfc2898DeriveBytes pbkdf2 = new(inputKeyMaterial, effectiveSalt, DefaultIterations))
                 {
                     derivedKey = pbkdf2.GetBytes(derivedKeyLength);
                 }
