@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using Lucinda;
 using Lucinda.Abstractions;
 using Lucinda.Protocol.X3DH;
 using Lucinda.Utilities;
@@ -149,12 +148,12 @@ namespace Lucinda.Samples.SecureMessaging
             Console.WriteLine("Step 5: Send encrypted messages (Double Ratchet)");
             Console.WriteLine("═══════════════════════════════════════════════════════════════════");
 
-            string[] messages = new[]
-            {
+            string[] messages =
+            [
                 "Hello Bob! 👋",
                 "This message is encrypted with the Double Ratchet algorithm.",
                 "Each message uses a different encryption key! 🔐"
-            };
+            ];
 
             foreach (string message in messages)
             {
@@ -202,7 +201,7 @@ namespace Lucinda.Samples.SecureMessaging
             Console.WriteLine("═══════════════════════════════════════════════════════════════════");
 
             string sameMessage = "Hello!";
-            List<byte[]> ciphertexts = new();
+            List<byte[]> ciphertexts = [];
 
             for (int i = 1; i <= 3; i++)
             {
@@ -227,7 +226,11 @@ namespace Lucinda.Samples.SecureMessaging
                 for (int j = i + 1; j < ciphertexts.Count; j++)
                 {
                     bool different = !ciphertexts[i].SequenceEqual(ciphertexts[j]);
-                    if (!different) allDifferent = false;
+                    if (!different)
+                    {
+                        allDifferent = false;
+                    }
+
                     Console.WriteLine($"  Ciphertext #{i + 1} vs #{j + 1}: {(different ? "✓ Different" : "✗ Same")}");
                 }
             }
@@ -287,14 +290,14 @@ namespace Lucinda.Samples.SecureMessaging
 
             CryptoResult<InitialMessageData> initialMessage = alice.GetInitialMessageData("bob");
 
-            string[] queuedMessages = new[]
-            {
+            string[] queuedMessages =
+            [
                 "Hey Bob! Are you there?",
                 "I wanted to share some exciting news!",
                 "Let me know when you're back online. 📱"
-            };
+            ];
 
-            List<byte[]> encryptedQueue = new();
+            List<byte[]> encryptedQueue = [];
             foreach (string msg in queuedMessages)
             {
                 CryptoResult<byte[]> encrypted = alice.SendMessage("bob", msg);
@@ -361,8 +364,8 @@ namespace Lucinda.Samples.SecureMessaging
             Console.WriteLine();
 
             // Simulated conversation
-            (string sender, string message)[] conversation = new[]
-            {
+            (string sender, string message)[] conversation =
+            [
                 ("Alice", "Hey Bob! Did you see the news? 📰"),
                 ("Alice", "It's about that new cryptography breakthrough!"),
                 ("Bob", "Oh hey Alice! Yes, I heard about it! 🔐"),
@@ -371,7 +374,7 @@ namespace Lucinda.Samples.SecureMessaging
                 ("Bob", "Absolutely. Our messages are safe even if keys leak later."),
                 ("Alice", "That's the beauty of the Double Ratchet! 🎯"),
                 ("Bob", "Each message, new keys. Love it! 💪")
-            };
+            ];
 
             Console.WriteLine("═══════════════════════════════════════════════════════════════════");
             Console.WriteLine("Conversation (with DH Ratchet steps):");

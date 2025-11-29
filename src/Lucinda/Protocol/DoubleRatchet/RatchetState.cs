@@ -367,10 +367,10 @@ namespace Lucinda.Protocol.DoubleRatchet
             unchecked
             {
                 int hash = 17;
-                hash = hash * 31 + MessageNumber;
+                hash = (hash * 31) + MessageNumber;
                 if (PublicKeyHash != null && PublicKeyHash.Length >= 4)
                 {
-                    hash = hash * 31 + BitConverter.ToInt32(PublicKeyHash, 0);
+                    hash = (hash * 31) + BitConverter.ToInt32(PublicKeyHash, 0);
                 }
                 return hash;
             }
@@ -379,12 +379,18 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// <summary>
         /// Equality operator.
         /// </summary>
-        public static bool operator ==(SkippedKeyId left, SkippedKeyId right) => left.Equals(right);
+        public static bool operator ==(SkippedKeyId left, SkippedKeyId right)
+        {
+            return left.Equals(right);
+        }
 
         /// <summary>
         /// Inequality operator.
         /// </summary>
-        public static bool operator !=(SkippedKeyId left, SkippedKeyId right) => !left.Equals(right);
+        public static bool operator !=(SkippedKeyId left, SkippedKeyId right)
+        {
+            return !left.Equals(right);
+        }
     }
 }
 #endif

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 #endif
 using Lucinda.Abstractions;
-using Lucinda.Symmetric;
 using Lucinda.Utilities;
 using System.Collections.Concurrent;
 

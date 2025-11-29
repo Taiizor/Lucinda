@@ -4,13 +4,12 @@
 // </copyright>
 
 #if NET6_0_OR_GREATER
-using System.Security.Cryptography;
-
 using Lucinda.Abstractions;
 using Lucinda.KeyDerivation;
 using Lucinda.KeyExchange;
 using Lucinda.Signatures;
 using Lucinda.Utilities;
+using System.Security.Cryptography;
 
 namespace Lucinda.Protocol.X3DH
 {

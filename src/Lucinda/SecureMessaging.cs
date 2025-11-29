@@ -4,15 +4,14 @@
 // </copyright>
 
 #if NET6_0_OR_GREATER
-using System.Collections.Concurrent;
-using System.Text;
-
 using Lucinda.Abstractions;
 using Lucinda.KeyExchange;
 using Lucinda.KeyManagement;
 using Lucinda.Protocol.DoubleRatchet;
 using Lucinda.Protocol.X3DH;
 using Lucinda.Utilities;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace Lucinda
 {
