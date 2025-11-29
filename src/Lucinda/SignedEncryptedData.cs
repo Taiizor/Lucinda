@@ -20,13 +20,13 @@ namespace Lucinda
         /// Gets or sets the encrypted data.
         /// </summary>
         /// <value>The encrypted data bytes.</value>
-        public byte[] EncryptedData { get; set; } = Array.Empty<byte>();
+        public byte[] EncryptedData { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the digital signature of the encrypted data.
         /// </summary>
         /// <value>The signature bytes.</value>
-        public byte[] Signature { get; set; } = Array.Empty<byte>();
+        public byte[] Signature { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the version of the signed encrypted data format.

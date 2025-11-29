@@ -54,10 +54,14 @@ namespace Lucinda.Utilities
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="buffer"/> is null.</exception>
         public static void Fill(byte[] buffer)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(buffer);
+#else
             if (buffer == null)
             {
                 throw new ArgumentNullException(nameof(buffer));
             }
+#endif
 
 #if NETFRAMEWORK || NETSTANDARD2_0
             _rng.GetBytes(buffer);

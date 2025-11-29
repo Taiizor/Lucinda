@@ -129,7 +129,7 @@ namespace Lucinda.Utilities
         {
             if (string.IsNullOrEmpty(hex))
             {
-                return Array.Empty<byte>();
+                return [];
             }
 
             if (hex.Length % 2 != 0)
@@ -218,7 +218,7 @@ namespace Lucinda.Utilities
         {
             if (arrays == null || arrays.Length == 0)
             {
-                return Array.Empty<byte>();
+                return [];
             }
 
             int totalLength = 0;
@@ -251,10 +251,14 @@ namespace Lucinda.Utilities
         /// <returns>The SHA-256 hash of the data.</returns>
         public static byte[] ComputeSha256(byte[] data)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(data);
+#else
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
+#endif
 
 #if NET5_0_OR_GREATER
             return SHA256.HashData(data);
@@ -271,10 +275,14 @@ namespace Lucinda.Utilities
         /// <returns>The SHA-384 hash of the data.</returns>
         public static byte[] ComputeSha384(byte[] data)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(data);
+#else
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
+#endif
 
 #if NET5_0_OR_GREATER
             return SHA384.HashData(data);
@@ -291,10 +299,14 @@ namespace Lucinda.Utilities
         /// <returns>The SHA-512 hash of the data.</returns>
         public static byte[] ComputeSha512(byte[] data)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(data);
+#else
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
+#endif
 
 #if NET5_0_OR_GREATER
             return SHA512.HashData(data);
@@ -312,15 +324,23 @@ namespace Lucinda.Utilities
         /// <returns>The HMAC-SHA256 authentication code.</returns>
         public static byte[] ComputeHmacSha256(byte[] key, byte[] data)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(key);
+#else
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
+#endif
 
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(data);
+#else
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
+#endif
 
 #if NET6_0_OR_GREATER
             return HMACSHA256.HashData(key, data);
@@ -338,15 +358,23 @@ namespace Lucinda.Utilities
         /// <returns>The HMAC-SHA512 authentication code.</returns>
         public static byte[] ComputeHmacSha512(byte[] key, byte[] data)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(key);
+#else
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
+#endif
 
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(data);
+#else
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
+#endif
 
 #if NET6_0_OR_GREATER
             return HMACSHA512.HashData(key, data);

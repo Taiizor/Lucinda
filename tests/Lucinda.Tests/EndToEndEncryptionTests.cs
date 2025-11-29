@@ -50,7 +50,7 @@ namespace Lucinda.Tests
             // Arrange
             using EndToEndEncryption e2ee = new();
             CryptoResult<AsymmetricKeyPair> keyPair = e2ee.GenerateKeyPair();
-            byte[] originalData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            byte[] originalData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
             // Act
             CryptoResult<byte[]> encryptResult = e2ee.EncryptData(originalData, keyPair.Value.PublicKey);

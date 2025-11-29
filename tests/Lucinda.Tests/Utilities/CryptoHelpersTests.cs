@@ -15,8 +15,8 @@ namespace Lucinda.Tests.Utilities
         public void ConstantTimeEquals_WithEqualArrays_ShouldReturnTrue()
         {
             // Arrange
-            byte[] a = new byte[] { 1, 2, 3, 4, 5 };
-            byte[] b = new byte[] { 1, 2, 3, 4, 5 };
+            byte[] a = [1, 2, 3, 4, 5];
+            byte[] b = [1, 2, 3, 4, 5];
 
             // Act
             bool result = CryptoHelpers.ConstantTimeEquals(a, b);
@@ -29,8 +29,8 @@ namespace Lucinda.Tests.Utilities
         public void ConstantTimeEquals_WithDifferentArrays_ShouldReturnFalse()
         {
             // Arrange
-            byte[] a = new byte[] { 1, 2, 3, 4, 5 };
-            byte[] b = new byte[] { 1, 2, 3, 4, 6 };
+            byte[] a = [1, 2, 3, 4, 5];
+            byte[] b = [1, 2, 3, 4, 6];
 
             // Act
             bool result = CryptoHelpers.ConstantTimeEquals(a, b);
@@ -43,8 +43,8 @@ namespace Lucinda.Tests.Utilities
         public void ConstantTimeEquals_WithDifferentLengths_ShouldReturnFalse()
         {
             // Arrange
-            byte[] a = new byte[] { 1, 2, 3 };
-            byte[] b = new byte[] { 1, 2, 3, 4, 5 };
+            byte[] a = [1, 2, 3];
+            byte[] b = [1, 2, 3, 4, 5];
 
             // Act
             bool result = CryptoHelpers.ConstantTimeEquals(a, b);
@@ -57,7 +57,7 @@ namespace Lucinda.Tests.Utilities
         public void ToHexString_AndFromHexString_ShouldRoundTrip()
         {
             // Arrange
-            byte[] original = new byte[] { 0x00, 0xFF, 0xAB, 0xCD, 0x12 };
+            byte[] original = [0x00, 0xFF, 0xAB, 0xCD, 0x12];
 
             // Act
             string hex = CryptoHelpers.ToHexString(original);
@@ -71,7 +71,7 @@ namespace Lucinda.Tests.Utilities
         public void ToBase64_AndFromBase64_ShouldRoundTrip()
         {
             // Arrange
-            byte[] original = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            byte[] original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
             // Act
             string base64 = CryptoHelpers.ToBase64(original);
@@ -99,9 +99,9 @@ namespace Lucinda.Tests.Utilities
         public void Concatenate_ShouldCombineArrays()
         {
             // Arrange
-            byte[] a = new byte[] { 1, 2, 3 };
-            byte[] b = new byte[] { 4, 5, 6 };
-            byte[] c = new byte[] { 7, 8, 9 };
+            byte[] a = [1, 2, 3];
+            byte[] b = [4, 5, 6];
+            byte[] c = [7, 8, 9];
 
             // Act
             byte[] result = CryptoHelpers.Concatenate(a, b, c);
@@ -182,7 +182,7 @@ namespace Lucinda.Tests.Utilities
         public void SecureClear_ShouldZeroOutArray()
         {
             // Arrange
-            byte[] data = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+            byte[] data = [1, 2, 3, 4, 5, 6, 7, 8];
 
             // Act
             CryptoHelpers.SecureClear(data);

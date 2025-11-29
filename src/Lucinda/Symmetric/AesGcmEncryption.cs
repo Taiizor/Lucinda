@@ -69,10 +69,14 @@ namespace Lucinda.Symmetric
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
         public AesGcmEncryption(byte[] key)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(key);
+#else
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
+#endif
 
             int keySizeInBits = key.Length * 8;
             ValidateKeySize(keySizeInBits);
@@ -274,7 +278,7 @@ namespace Lucinda.Symmetric
             }
 
             // Compute HMAC for authentication
-            byte[] dataToAuthenticate = CryptoHelpers.Concatenate(aes.IV, ciphertext, associatedData ?? Array.Empty<byte>());
+            byte[] dataToAuthenticate = CryptoHelpers.Concatenate(aes.IV, ciphertext, associatedData ?? []);
             byte[] hmac = CryptoHelpers.ComputeHmacSha256(_key, dataToAuthenticate);
 
             // Format: [IV (16 bytes)][HMAC (32 bytes)][ciphertext]
@@ -305,7 +309,7 @@ namespace Lucinda.Symmetric
             Array.Copy(encryptedData, ivSize + hmacSize, ciphertext, 0, ciphertext.Length);
 
             // Verify HMAC
-            byte[] dataToAuthenticate = CryptoHelpers.Concatenate(iv, ciphertext, associatedData ?? Array.Empty<byte>());
+            byte[] dataToAuthenticate = CryptoHelpers.Concatenate(iv, ciphertext, associatedData ?? []);
             byte[] computedHmac = CryptoHelpers.ComputeHmacSha256(_key, dataToAuthenticate);
 
             if (!CryptoHelpers.ConstantTimeEquals(storedHmac, computedHmac))
@@ -335,10 +339,14 @@ namespace Lucinda.Symmetric
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(AesGcmEncryption));
             }
+#endif
         }
     }
 }

@@ -75,10 +75,7 @@ namespace Lucinda
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public EndToEndEncryption(EndToEndEncryptionOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             _hybridEncryption = new RsaAesHybridEncryption(
                 options.RsaKeySizeInBits,
@@ -526,10 +523,14 @@ namespace Lucinda
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(EndToEndEncryption));
             }
+#endif
         }
     }
 }

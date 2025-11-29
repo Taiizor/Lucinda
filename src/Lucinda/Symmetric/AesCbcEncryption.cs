@@ -62,10 +62,14 @@ namespace Lucinda.Symmetric
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
         public AesCbcEncryption(byte[] key, bool useHmac = true)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(key);
+#else
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
+#endif
 
             int keySizeInBits = key.Length * 8;
             ValidateKeySize(keySizeInBits);
@@ -121,7 +125,7 @@ namespace Lucinda.Symmetric
                     byte[] dataToAuthenticate = CryptoHelpers.Concatenate(
                         aes.IV,
                         ciphertext,
-                        associatedData ?? Array.Empty<byte>()
+                        associatedData ?? []
                     );
                     byte[] hmac = CryptoHelpers.ComputeHmacSha256(_key, dataToAuthenticate);
 
@@ -191,7 +195,7 @@ namespace Lucinda.Symmetric
                     byte[] dataToAuthenticate = CryptoHelpers.Concatenate(
                         iv,
                         ciphertext,
-                        associatedData ?? Array.Empty<byte>()
+                        associatedData ?? []
                     );
                     byte[] computedHmac = CryptoHelpers.ComputeHmacSha256(_key, dataToAuthenticate);
 
@@ -280,10 +284,14 @@ namespace Lucinda.Symmetric
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(AesCbcEncryption));
             }
+#endif
         }
     }
 }
