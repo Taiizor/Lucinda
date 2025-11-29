@@ -15,6 +15,7 @@ A comprehensive end-to-end encryption (E2EE) library for .NET, providing secure 
 - **Digital Signatures**: RSA (PSS/PKCS#1) and ECDSA
 - **Key Derivation**: PBKDF2 and HKDF
 - **Secure Key Storage**: In-memory storage with secure clearing
+- **Signal Protocol-like Messaging**: X3DH + Double Ratchet with forward secrecy
 
 ## Supported Platforms
 
@@ -58,6 +59,28 @@ var encrypted = e2ee.EncryptMessage("Hello, Bob!", bobKeyPair.Value.PublicKey);
 // Bob decrypts the message
 var decrypted = e2ee.DecryptMessage(encrypted.Value, bobKeyPair.Value.PrivateKey);
 Console.WriteLine(decrypted.Value); // "Hello, Bob!"
+```
+
+### Signal Protocol-like Secure Messaging
+
+```csharp
+using Lucinda;
+
+using var alice = new SecureMessaging();
+using var bob = new SecureMessaging();
+
+alice.GenerateIdentityKeyPair();
+bob.GenerateIdentityKeyPair();
+bob.GeneratePreKeyBundle();
+
+var bobBundle = bob.GetPublicPreKeyBundle();
+alice.InitializeSession("bob", bobBundle.Value);
+
+var initialMessage = alice.GetInitialMessageData("bob");
+bob.CreateSessionFromInitialMessage("alice", initialMessage.Value);
+
+var encrypted = alice.SendMessage("bob", "Hello with forward secrecy!");
+var decrypted = bob.ReceiveMessage("alice", encrypted.Value);
 ```
 
 ### Symmetric Encryption (AES-GCM)
@@ -161,6 +184,9 @@ result.Match(
 | `EcdsaSignature` | ECDSA digital signatures |
 | `Pbkdf2KeyDerivation` | Password-based key derivation |
 | `HkdfKeyDerivation` | HKDF key derivation |
+| `SecureMessaging` | Signal Protocol-like secure messaging |
+| `X3DHKeyAgreement` | X3DH key agreement |
+| `DoubleRatchet` | Double Ratchet algorithm |
 
 ## Security Considerations
 

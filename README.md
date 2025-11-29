@@ -33,6 +33,13 @@ A comprehensive end-to-end encryption (E2EE) library for .NET, providing secure 
   - In-memory key storage with secure clearing
   - Extensible interface for custom storage backends
 
+- **Signal Protocol-like Secure Messaging**
+  - X3DH (Extended Triple Diffie-Hellman) key agreement
+  - Double Ratchet algorithm for forward-secure messaging
+  - Pre-key bundles for asynchronous session establishment
+  - Forward Secrecy: Past messages remain secure if keys are compromised
+  - Post-Compromise Security: Future messages become secure after compromise
+
 ## Supported Platforms
 
 | Platform | Version |
@@ -77,6 +84,35 @@ var encrypted = e2ee.EncryptMessage("Hello, Bob!", bobKeyPair.Value.PublicKey);
 // Bob decrypts the message
 var decrypted = e2ee.DecryptMessage(encrypted.Value, bobKeyPair.Value.PrivateKey);
 Console.WriteLine(decrypted.Value); // "Hello, Bob!"
+```
+
+### Signal Protocol-like Secure Messaging
+
+The `SecureMessaging` class provides Signal Protocol-like security with X3DH and Double Ratchet:
+
+```csharp
+using Lucinda;
+
+// Alice and Bob setup
+using var alice = new SecureMessaging();
+using var bob = new SecureMessaging();
+
+alice.GenerateIdentityKeyPair();
+bob.GenerateIdentityKeyPair();
+bob.GeneratePreKeyBundle();
+
+// Alice initiates session with Bob's pre-key bundle
+var bobBundle = bob.GetPublicPreKeyBundle();
+alice.InitializeSession("bob", bobBundle.Value);
+
+// Bob creates session from Alice's initial contact
+var initialMessage = alice.GetInitialMessageData("bob");
+bob.CreateSessionFromInitialMessage("alice", initialMessage.Value);
+
+// Send encrypted messages with forward secrecy
+var encrypted = alice.SendMessage("bob", "Hello with forward secrecy!");
+var decrypted = bob.ReceiveMessage("alice", encrypted.Value);
+Console.WriteLine(decrypted.Value); // "Hello with forward secrecy!"
 ```
 
 ### Symmetric Encryption (AES-GCM)
@@ -267,6 +303,9 @@ result.Match(
 | `Pbkdf2KeyDerivation` | Password-based key derivation |
 | `HkdfKeyDerivation` | HKDF key derivation |
 | `InMemoryKeyStorage` | Secure in-memory key storage |
+| `SecureMessaging` | Signal Protocol-like secure messaging |
+| `X3DHKeyAgreement` | X3DH key agreement protocol |
+| `DoubleRatchet` | Double Ratchet algorithm |
 
 ### Interfaces
 
@@ -279,6 +318,10 @@ result.Match(
 | `IDigitalSignature` | Contract for digital signatures |
 | `IKeyDerivation` | Contract for key derivation |
 | `ISecureKeyStorage` | Contract for secure key storage |
+| `IX3DHKeyAgreement` | Contract for X3DH key agreement |
+| `IDoubleRatchet` | Contract for Double Ratchet |
+| `IKdfChain` | Contract for KDF chain operations |
+| `ISessionStorage` | Contract for session storage |
 
 ## License
 
