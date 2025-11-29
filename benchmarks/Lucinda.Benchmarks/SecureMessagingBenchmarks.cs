@@ -50,8 +50,6 @@ namespace Lucinda.Benchmarks
         private RatchetState _bobRatchetState = null!;
         private byte[] _sharedSecret = null!;
 
-        private byte[] _preEncryptedMessage = null!;
-
         /// <summary>
         /// Setup benchmark data and instances.
         /// </summary>
@@ -101,9 +99,6 @@ namespace Lucinda.Benchmarks
                 _bobPreKeyBundleWithKeys.Bundle.SignedPreKey,
                 _bobPreKeyBundleWithKeys.SignedPreKeyPrivate);
             _bobRatchetState = _doubleRatchet.InitializeAsResponder(_sharedSecret, bobSignedPreKeyPair).Value;
-
-            // Pre-encrypt a message for decryption benchmark
-            _preEncryptedMessage = _alice.SendMessage("bob", "Benchmark message").Value;
         }
 
         /// <summary>
@@ -234,11 +229,15 @@ namespace Lucinda.Benchmarks
 
         /// <summary>
         /// Benchmark SecureMessaging receive/decrypt message.
+        /// Note: This benchmark measures the decrypt operation by first encrypting a fresh message,
+        /// because Double Ratchet state changes after each decrypt (security feature).
         /// </summary>
         [Benchmark(Description = "SecureMessaging Receive")]
         public string SecureMessaging_ReceiveMessage()
         {
-            return _bob.ReceiveMessage("alice", _preEncryptedMessage).Value;
+            // Must encrypt fresh message each time because ratchet state advances
+            byte[] encrypted = _alice.SendMessage("bob", "Benchmark decrypt message").Value;
+            return _bob.ReceiveMessage("alice", encrypted).Value;
         }
 
         /// <summary>
