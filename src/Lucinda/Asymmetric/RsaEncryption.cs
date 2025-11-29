@@ -353,17 +353,17 @@ namespace Lucinda.Asymmetric
         private static byte[] SerializeRsaParameters(RSAParameters parameters)
         {
             // Simple serialization: concat all parameters with length prefixes
-            byte[][] components = new[]
-            {
-                parameters.Modulus ?? Array.Empty<byte>(),
-                parameters.Exponent ?? Array.Empty<byte>(),
-                parameters.D ?? Array.Empty<byte>(),
-                parameters.P ?? Array.Empty<byte>(),
-                parameters.Q ?? Array.Empty<byte>(),
-                parameters.DP ?? Array.Empty<byte>(),
-                parameters.DQ ?? Array.Empty<byte>(),
-                parameters.InverseQ ?? Array.Empty<byte>()
-            };
+            byte[][] components =
+            [
+                parameters.Modulus ?? [],
+                parameters.Exponent ?? [],
+                parameters.D ?? [],
+                parameters.P ?? [],
+                parameters.Q ?? [],
+                parameters.DP ?? [],
+                parameters.DQ ?? [],
+                parameters.InverseQ ?? []
+            ];
 
             int totalLength = 4; // Version
             foreach (byte[]? component in components)
@@ -450,10 +450,14 @@ namespace Lucinda.Asymmetric
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(RsaEncryption));
             }
+#endif
         }
     }
 }

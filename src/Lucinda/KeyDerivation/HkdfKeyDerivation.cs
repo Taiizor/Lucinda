@@ -96,12 +96,12 @@ namespace Lucinda.KeyDerivation
                     _hashAlgorithm,
                     inputKeyMaterial,
                     derivedKeyLength,
-                    salt ?? Array.Empty<byte>(),
-                    info ?? Array.Empty<byte>());
+                    salt ?? [],
+                    info ?? []);
                 return CryptoResult<byte[]>.Success(derivedKey);
 #else
                 // Manual HKDF implementation for older frameworks
-                var derivedKey = HkdfImplementation(inputKeyMaterial, salt, info, derivedKeyLength);
+                byte[] derivedKey = HkdfImplementation(inputKeyMaterial, salt, info, derivedKeyLength);
                 return CryptoResult<byte[]>.Success(derivedKey);
 #endif
             }
@@ -156,7 +156,7 @@ namespace Lucinda.KeyDerivation
                 byte[] prk = HKDF.Extract(_hashAlgorithm, inputKeyMaterial, salt);
                 return CryptoResult<byte[]>.Success(prk);
 #else
-                var prk = HkdfExtract(salt, inputKeyMaterial);
+                byte[] prk = HkdfExtract(salt, inputKeyMaterial);
                 return CryptoResult<byte[]>.Success(prk);
 #endif
             }
@@ -201,10 +201,10 @@ namespace Lucinda.KeyDerivation
             try
             {
 #if NET5_0_OR_GREATER
-                byte[] okm = HKDF.Expand(_hashAlgorithm, prk, outputLength, info ?? Array.Empty<byte>());
+                byte[] okm = HKDF.Expand(_hashAlgorithm, prk, outputLength, info ?? []);
                 return CryptoResult<byte[]>.Success(okm);
 #else
-                var okm = HkdfExpand(prk, info, outputLength);
+                byte[] okm = HkdfExpand(prk, info, outputLength);
                 return CryptoResult<byte[]>.Success(okm);
 #endif
             }
@@ -223,33 +223,33 @@ namespace Lucinda.KeyDerivation
 #if !NET5_0_OR_GREATER
         private byte[] HkdfImplementation(byte[] ikm, byte[]? salt, byte[]? info, int outputLength)
         {
-            var prk = HkdfExtract(salt, ikm);
+            byte[] prk = HkdfExtract(salt, ikm);
             return HkdfExpand(prk, info, outputLength);
         }
 
         private byte[] HkdfExtract(byte[]? salt, byte[] ikm)
         {
             // If salt is not provided, use a string of HashLen zeros
-            var effectiveSalt = salt ?? new byte[_hashLength];
+            byte[] effectiveSalt = salt ?? new byte[_hashLength];
             return ComputeHmac(effectiveSalt, ikm);
         }
 
         private byte[] HkdfExpand(byte[] prk, byte[]? info, int outputLength)
         {
-            var effectiveInfo = info ?? Array.Empty<byte>();
-            var n = (int)Math.Ceiling((double)outputLength / _hashLength);
-            var okm = new byte[outputLength];
-            var t = Array.Empty<byte>();
-            var offset = 0;
+            byte[] effectiveInfo = info ?? [];
+            int n = (int)Math.Ceiling((double)outputLength / _hashLength);
+            byte[] okm = new byte[outputLength];
+            byte[] t = [];
+            int offset = 0;
 
-            for (var i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
             {
                 // T(i) = HMAC(PRK, T(i-1) | info | i)
-                var counterByte = new byte[] { (byte)i };
-                var inputData = CryptoHelpers.Concatenate(t, effectiveInfo, counterByte);
+                byte[] counterByte = [(byte)i];
+                byte[] inputData = CryptoHelpers.Concatenate(t, effectiveInfo, counterByte);
                 t = ComputeHmac(prk, inputData);
 
-                var bytesToCopy = Math.Min(_hashLength, outputLength - offset);
+                int bytesToCopy = Math.Min(_hashLength, outputLength - offset);
                 Array.Copy(t, 0, okm, offset, bytesToCopy);
                 offset += bytesToCopy;
             }
@@ -269,10 +269,8 @@ namespace Lucinda.KeyDerivation
             }
             else if (_hashAlgorithm == HashAlgorithmName.SHA384)
             {
-                using (var hmac = new HMACSHA384(key))
-                {
-                    return hmac.ComputeHash(data);
-                }
+                using HMACSHA384 hmac = new(key);
+                return hmac.ComputeHash(data);
             }
             else
             {
@@ -307,10 +305,14 @@ namespace Lucinda.KeyDerivation
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(HkdfKeyDerivation));
             }
+#endif
         }
     }
 }
