@@ -221,22 +221,15 @@ namespace Lucinda.Samples.GroupMessaging.PerRecipient
     /// <summary>
     /// Represents a group member with per-recipient encryption capabilities.
     /// </summary>
-    class GroupMember : IDisposable
+    class GroupMember(string name) : IDisposable
     {
-        private readonly EndToEndEncryption _e2ee;
-        private readonly Dictionary<string, byte[]> _otherPublicKeys;
+        private readonly EndToEndEncryption _e2ee = new();
+        private readonly Dictionary<string, byte[]> _otherPublicKeys = [];
         private byte[]? _privateKey;
         private bool _disposed;
 
-        public string Name { get; }
+        public string Name { get; } = name;
         public byte[]? PublicKey { get; private set; }
-
-        public GroupMember(string name)
-        {
-            Name = name;
-            _e2ee = new EndToEndEncryption();
-            _otherPublicKeys = [];
-        }
 
         /// <summary>
         /// Generates a new key pair for this member.

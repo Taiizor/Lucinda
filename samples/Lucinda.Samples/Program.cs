@@ -82,7 +82,7 @@ namespace Lucinda.Samples
             if (encryptWithAad.IsSuccess)
             {
                 CryptoResult<byte[]> decryptWithAad = aes.Decrypt(encryptWithAad.Value, metadata);
-                Console.WriteLine($"✓ AAD encryption/decryption successful!");
+                Console.WriteLine($"✓ AAD encryption/decryption successful: {decryptWithAad.IsSuccess}");
 
                 // Try decrypting with wrong AAD (should fail)
                 byte[] wrongAad = CryptoHelpers.GetUtf8Bytes("wrong-metadata");
@@ -130,7 +130,7 @@ namespace Lucinda.Samples
 
             // Binary data encryption
             Console.WriteLine("\n--- Binary Data Encryption ---");
-            byte[] binaryData = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0xFF, 0xFE, 0xFD };
+            byte[] binaryData = [0x01, 0x02, 0x03, 0x04, 0x05, 0xFF, 0xFE, 0xFD];
             CryptoResult<byte[]> encryptedData = e2ee.EncryptData(binaryData, aliceKeyPair.Value.PublicKey);
             if (encryptedData.IsSuccess)
             {
@@ -315,9 +315,9 @@ namespace Lucinda.Samples
 
             // Constant-time comparison
             Console.WriteLine("\n--- Constant-Time Comparison ---");
-            byte[] a = new byte[] { 1, 2, 3, 4, 5 };
-            byte[] b = new byte[] { 1, 2, 3, 4, 5 };
-            byte[] c = new byte[] { 1, 2, 3, 4, 6 };
+            byte[] a = [1, 2, 3, 4, 5];
+            byte[] b = [1, 2, 3, 4, 5];
+            byte[] c = [1, 2, 3, 4, 6];
             Console.WriteLine($"a == b: {CryptoHelpers.ConstantTimeEquals(a, b)}");
             Console.WriteLine($"a == c: {CryptoHelpers.ConstantTimeEquals(a, c)}");
             Console.WriteLine("✓ Constant-time comparison prevents timing attacks!");

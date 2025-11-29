@@ -193,21 +193,14 @@ namespace Lucinda.Samples.GroupMessaging.SenderKeys
     /// <summary>
     /// Represents a group member with sender key capabilities.
     /// </summary>
-    class GroupMember : IDisposable
+    class GroupMember(string name) : IDisposable
     {
-        private readonly AesGcmEncryption _encryption;
-        private readonly Dictionary<string, byte[]> _otherSenderKeys;
+        private readonly AesGcmEncryption _encryption = new(256);
+        private readonly Dictionary<string, byte[]> _otherSenderKeys = [];
         private bool _disposed;
 
-        public string Name { get; }
+        public string Name { get; } = name;
         public byte[]? SenderKey { get; private set; }
-
-        public GroupMember(string name)
-        {
-            Name = name;
-            _encryption = new AesGcmEncryption(256);
-            _otherSenderKeys = [];
-        }
 
         /// <summary>
         /// Generates a new sender key for this group member.

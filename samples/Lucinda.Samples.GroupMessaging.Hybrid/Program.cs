@@ -272,20 +272,14 @@ namespace Lucinda.Samples.GroupMessaging.Hybrid
     /// <summary>
     /// Represents a group member with hybrid encryption capabilities.
     /// </summary>
-    class GroupMember : IDisposable
+    class GroupMember(string name) : IDisposable
     {
-        private readonly Dictionary<string, byte[]> _otherPublicKeys;
+        private readonly Dictionary<string, byte[]> _otherPublicKeys = [];
         private RSA? _rsa;
         private bool _disposed;
 
-        public string Name { get; }
+        public string Name { get; } = name;
         public byte[]? PublicKey { get; private set; }
-
-        public GroupMember(string name)
-        {
-            Name = name;
-            _otherPublicKeys = [];
-        }
 
         /// <summary>
         /// Generates a new RSA key pair for this member.
