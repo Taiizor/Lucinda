@@ -5,6 +5,7 @@
 
 #if NET6_0_OR_GREATER
 using Lucinda.Utilities;
+using System.Security.Cryptography;
 
 namespace Lucinda.Protocol.DoubleRatchet
 {
@@ -41,7 +42,7 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// </summary>
         public RatchetState()
         {
-            SkippedMessageKeys = new Dictionary<SkippedKeyId, byte[]>();
+            SkippedMessageKeys = [];
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace Lucinda.Protocol.DoubleRatchet
 
             foreach (KeyValuePair<SkippedKeyId, byte[]> kvp in SkippedMessageKeys)
             {
-                clone.SkippedMessageKeys[kvp.Key] = kvp.Value.ToArray();
+                clone.SkippedMessageKeys[kvp.Key] = [.. kvp.Value];
             }
 
             return clone;
@@ -324,34 +325,27 @@ namespace Lucinda.Protocol.DoubleRatchet
     /// <summary>
     /// Represents a unique identifier for a skipped message key.
     /// </summary>
-    public readonly struct SkippedKeyId : IEquatable<SkippedKeyId>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="SkippedKeyId"/> struct.
+    /// </remarks>
+    /// <param name="publicKey">The DH public key (will be hashed).</param>
+    /// <param name="messageNumber">The message number.</param>
+    /// <param name="isHash">If true, publicKey is already a hash.</param>
+    public readonly struct SkippedKeyId(byte[] publicKey, int messageNumber, bool isHash = false) : IEquatable<SkippedKeyId>
     {
         /// <summary>
         /// Gets the hash of the DH public key.
         /// </summary>
-        public byte[] PublicKeyHash { get; }
+        public byte[] PublicKeyHash { get; } = isHash ? publicKey : ComputeHash(publicKey);
 
         /// <summary>
         /// Gets the message number.
         /// </summary>
-        public int MessageNumber { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SkippedKeyId"/> struct.
-        /// </summary>
-        /// <param name="publicKey">The DH public key (will be hashed).</param>
-        /// <param name="messageNumber">The message number.</param>
-        /// <param name="isHash">If true, publicKey is already a hash.</param>
-        public SkippedKeyId(byte[] publicKey, int messageNumber, bool isHash = false)
-        {
-            PublicKeyHash = isHash ? publicKey : ComputeHash(publicKey);
-            MessageNumber = messageNumber;
-        }
+        public int MessageNumber { get; } = messageNumber;
 
         private static byte[] ComputeHash(byte[] data)
         {
-            using System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
-            return sha256.ComputeHash(data);
+            return SHA256.HashData(data);
         }
 
         /// <inheritdoc/>

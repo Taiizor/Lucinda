@@ -22,26 +22,19 @@ namespace Lucinda.Protocol.DoubleRatchet
     /// The header is sent unencrypted (but authenticated) with each message.
     /// </para>
     /// </remarks>
-    public sealed class RatchetHeader
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="RatchetHeader"/> class.
+    /// </remarks>
+    /// <param name="dhPublicKey">The sender's current DH public key.</param>
+    /// <param name="previousChainLength">The number of messages in the previous sending chain.</param>
+    /// <param name="messageNumber">The message number in the current sending chain.</param>
+    public sealed class RatchetHeader(byte[] dhPublicKey, int previousChainLength, int messageNumber)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RatchetHeader"/> class.
-        /// </summary>
-        /// <param name="dhPublicKey">The sender's current DH public key.</param>
-        /// <param name="previousChainLength">The number of messages in the previous sending chain.</param>
-        /// <param name="messageNumber">The message number in the current sending chain.</param>
-        public RatchetHeader(byte[] dhPublicKey, int previousChainLength, int messageNumber)
-        {
-            DHPublicKey = dhPublicKey ?? throw new ArgumentNullException(nameof(dhPublicKey));
-            PreviousChainLength = previousChainLength;
-            MessageNumber = messageNumber;
-        }
-
         /// <summary>
         /// Gets the sender's current DH public key.
         /// </summary>
         /// <value>The DH public key bytes.</value>
-        public byte[] DHPublicKey { get; }
+        public byte[] DHPublicKey { get; } = dhPublicKey ?? throw new ArgumentNullException(nameof(dhPublicKey));
 
         /// <summary>
         /// Gets the number of messages sent in the previous sending chain.
@@ -51,13 +44,13 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// This allows the recipient to skip the appropriate number of message keys
         /// in their previous receiving chain.
         /// </remarks>
-        public int PreviousChainLength { get; }
+        public int PreviousChainLength { get; } = previousChainLength;
 
         /// <summary>
         /// Gets the message number within the current sending chain.
         /// </summary>
         /// <value>The message number (0-indexed).</value>
-        public int MessageNumber { get; }
+        public int MessageNumber { get; } = messageNumber;
 
         /// <summary>
         /// Serializes the header to a byte array.
@@ -123,30 +116,24 @@ namespace Lucinda.Protocol.DoubleRatchet
     /// <remarks>
     /// Contains both the header (for ratchet synchronization) and the encrypted ciphertext.
     /// </remarks>
-    public sealed class RatchetMessage
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="RatchetMessage"/> class.
+    /// </remarks>
+    /// <param name="header">The message header.</param>
+    /// <param name="ciphertext">The encrypted message ciphertext.</param>
+    public sealed class RatchetMessage(RatchetHeader header, byte[] ciphertext)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RatchetMessage"/> class.
-        /// </summary>
-        /// <param name="header">The message header.</param>
-        /// <param name="ciphertext">The encrypted message ciphertext.</param>
-        public RatchetMessage(RatchetHeader header, byte[] ciphertext)
-        {
-            Header = header ?? throw new ArgumentNullException(nameof(header));
-            Ciphertext = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
-        }
-
         /// <summary>
         /// Gets the message header.
         /// </summary>
         /// <value>The ratchet header.</value>
-        public RatchetHeader Header { get; }
+        public RatchetHeader Header { get; } = header ?? throw new ArgumentNullException(nameof(header));
 
         /// <summary>
         /// Gets the encrypted ciphertext.
         /// </summary>
         /// <value>The ciphertext bytes.</value>
-        public byte[] Ciphertext { get; }
+        public byte[] Ciphertext { get; } = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
 
         /// <summary>
         /// Serializes the complete message to a byte array.

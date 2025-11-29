@@ -33,24 +33,16 @@ namespace Lucinda.Protocol.DoubleRatchet
     /// </list>
     /// </para>
     /// </remarks>
-    public sealed class DoubleRatchet : IDoubleRatchet, IDisposable
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="DoubleRatchet"/> class.
+    /// </remarks>
+    /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
+    /// <param name="maxSkip">Maximum number of message keys to skip. Default is 100.</param>
+    public sealed class DoubleRatchet(ECCurve? curve = null, int maxSkip = 100) : IDoubleRatchet, IDisposable
     {
-        private readonly ECCurve _curve;
-        private readonly KdfChain _kdfChain;
-        private readonly int _maxSkip;
+        private readonly ECCurve _curve = curve ?? ECCurve.NamedCurves.nistP256;
+        private readonly KdfChain _kdfChain = new(HashAlgorithmName.SHA256);
         private bool _disposed;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DoubleRatchet"/> class.
-        /// </summary>
-        /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
-        /// <param name="maxSkip">Maximum number of message keys to skip. Default is 100.</param>
-        public DoubleRatchet(ECCurve? curve = null, int maxSkip = 100)
-        {
-            _curve = curve ?? ECCurve.NamedCurves.nistP256;
-            _kdfChain = new KdfChain(HashAlgorithmName.SHA256);
-            _maxSkip = maxSkip;
-        }
 
         /// <inheritdoc/>
         public string AlgorithmName => $"DoubleRatchet-{GetCurveName(_curve)}-{_kdfChain.AlgorithmName}";
@@ -84,8 +76,8 @@ namespace Lucinda.Protocol.DoubleRatchet
                 {
                     DHSendingPrivateKey = keyPairResult.Value.PrivateKey,
                     DHSendingPublicKey = keyPairResult.Value.PublicKey,
-                    DHReceivingPublicKey = remotePublicKey.ToArray(),
-                    RootKey = sharedSecret.ToArray(),
+                    DHReceivingPublicKey = [.. remotePublicKey],
+                    RootKey = [.. sharedSecret],
                     SendingMessageNumber = 0,
                     ReceivingMessageNumber = 0,
                     PreviousSendingChainLength = 0
@@ -140,10 +132,10 @@ namespace Lucinda.Protocol.DoubleRatchet
             {
                 RatchetState state = new()
                 {
-                    DHSendingPrivateKey = localKeyPair.PrivateKey.ToArray(),
-                    DHSendingPublicKey = localKeyPair.PublicKey.ToArray(),
+                    DHSendingPrivateKey = [.. localKeyPair.PrivateKey],
+                    DHSendingPublicKey = [.. localKeyPair.PublicKey],
                     DHReceivingPublicKey = null, // Will be set when first message is received
-                    RootKey = sharedSecret.ToArray(),
+                    RootKey = [.. sharedSecret],
                     SendingChainKey = null, // Will be set after first DH ratchet
                     ReceivingChainKey = null,
                     SendingMessageNumber = 0,
@@ -357,7 +349,7 @@ namespace Lucinda.Protocol.DoubleRatchet
                 state.ReceivingMessageNumber = 0;
 
                 // Update receiving public key
-                state.DHReceivingPublicKey = remotePublicKey.ToArray();
+                state.DHReceivingPublicKey = [.. remotePublicKey];
 
                 // Derive receiving chain key
                 CryptoResult<byte[]> dhResult = PerformDH(state.DHSendingPrivateKey!, state.DHReceivingPublicKey);
@@ -434,7 +426,7 @@ namespace Lucinda.Protocol.DoubleRatchet
                 return CryptoResult<bool>.Success(true);
             }
 
-            if (until - state.ReceivingMessageNumber > _maxSkip)
+            if (until - state.ReceivingMessageNumber > maxSkip)
             {
                 return CryptoResult<bool>.Failure($"Too many skipped messages: {until - state.ReceivingMessageNumber}");
             }
@@ -595,10 +587,14 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// </summary>
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(DoubleRatchet));
             }
+#endif
         }
 
         /// <inheritdoc/>

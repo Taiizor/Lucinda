@@ -8,10 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 #endif
-using System.Collections.Concurrent;
-
 using Lucinda.Abstractions;
+using Lucinda.Symmetric;
 using Lucinda.Utilities;
+using System.Collections.Concurrent;
 
 namespace Lucinda.KeyManagement
 {
@@ -58,7 +58,7 @@ namespace Lucinda.KeyManagement
             try
             {
                 // Create a copy to avoid external modification
-                byte[] dataCopy = sessionData.ToArray();
+                byte[] dataCopy = [.. sessionData];
                 _sessions.AddOrUpdate(sessionId, dataCopy, (_, oldValue) =>
                 {
                     // Securely clear old data
@@ -89,7 +89,7 @@ namespace Lucinda.KeyManagement
                 if (_sessions.TryGetValue(sessionId, out byte[]? sessionData))
                 {
                     // Return a copy to prevent external modification
-                    return CryptoResult<byte[]>.Success(sessionData.ToArray());
+                    return CryptoResult<byte[]>.Success([.. sessionData]);
                 }
 
                 return CryptoResult<byte[]>.Failure($"Session not found: {sessionId}");
@@ -147,7 +147,7 @@ namespace Lucinda.KeyManagement
 
             try
             {
-                return CryptoResult<string[]>.Success(_sessions.Keys.ToArray());
+                return CryptoResult<string[]>.Success([.. _sessions.Keys]);
             }
             catch (Exception ex)
             {
@@ -187,10 +187,14 @@ namespace Lucinda.KeyManagement
 
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(InMemorySessionStorage));
             }
+#endif
         }
 
         /// <inheritdoc/>

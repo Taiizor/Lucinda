@@ -39,26 +39,20 @@ namespace Lucinda.Protocol.X3DH
     /// </code>
     /// </para>
     /// </remarks>
-    public sealed class X3DHKeyAgreement : IX3DHKeyAgreement, IDisposable
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="X3DHKeyAgreement"/> class.
+    /// </remarks>
+    /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
+    public sealed class X3DHKeyAgreement(ECCurve? curve = null) : IX3DHKeyAgreement, IDisposable
     {
-        private readonly ECCurve _curve;
-        private readonly HkdfKeyDerivation _hkdf;
+        private readonly ECCurve _curve = curve ?? ECCurve.NamedCurves.nistP256;
+        private readonly HkdfKeyDerivation _hkdf = new(HashAlgorithmName.SHA256);
         private bool _disposed;
 
         /// <summary>
         /// The info parameter for HKDF key derivation in X3DH.
         /// </summary>
         private static readonly byte[] X3DHInfo = "X3DH"u8.ToArray();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="X3DHKeyAgreement"/> class.
-        /// </summary>
-        /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
-        public X3DHKeyAgreement(ECCurve? curve = null)
-        {
-            _curve = curve ?? ECCurve.NamedCurves.nistP256;
-            _hkdf = new HkdfKeyDerivation(HashAlgorithmName.SHA256);
-        }
 
         /// <inheritdoc/>
         public string AlgorithmName => $"X3DH-{GetCurveName(_curve)}";
@@ -110,7 +104,7 @@ namespace Lucinda.Protocol.X3DH
                 byte[] ephemeralPrivateKey = ephemeralResult.Value.PrivateKey;
 
                 // Perform the DH computations
-                List<byte[]> dhResults = new();
+                List<byte[]> dhResults = [];
 
                 // DH1: Sender Identity (private) + Recipient Signed Pre-Key (public)
                 CryptoResult<byte[]> dh1 = PerformDH(senderIdentityKeyPair.PrivateKey, recipientBundle.SignedPreKey);
@@ -150,7 +144,7 @@ namespace Lucinda.Protocol.X3DH
                 }
 
                 // Concatenate all DH outputs
-                byte[] dhConcat = ConcatenateArrays(dhResults.ToArray());
+                byte[] dhConcat = ConcatenateArrays([.. dhResults]);
 
                 // Derive the shared secret using HKDF
                 CryptoResult<byte[]> sharedSecretResult = _hkdf.DeriveKey(dhConcat, null, X3DHInfo, 32);
@@ -217,7 +211,7 @@ namespace Lucinda.Protocol.X3DH
             try
             {
                 // Perform the DH computations (mirror of initiator)
-                List<byte[]> dhResults = new();
+                List<byte[]> dhResults = [];
 
                 // DH1: Recipient Signed Pre-Key (private) + Sender Identity (public)
                 CryptoResult<byte[]> dh1 = PerformDH(recipientSignedPreKeyPair.PrivateKey, senderIdentityPublicKey);
@@ -257,7 +251,7 @@ namespace Lucinda.Protocol.X3DH
                 }
 
                 // Concatenate all DH outputs
-                byte[] dhConcat = ConcatenateArrays(dhResults.ToArray());
+                byte[] dhConcat = ConcatenateArrays([.. dhResults]);
 
                 // Derive the shared secret using HKDF
                 CryptoResult<byte[]> sharedSecretResult = _hkdf.DeriveKey(dhConcat, null, X3DHInfo, 32);
@@ -325,7 +319,7 @@ namespace Lucinda.Protocol.X3DH
                 }
 
                 // Generate one-time pre-keys if requested
-                Dictionary<int, byte[]> oneTimePreKeyPrivates = new();
+                Dictionary<int, byte[]> oneTimePreKeyPrivates = [];
                 byte[]? firstOneTimePreKey = null;
                 int? firstOneTimePreKeyId = null;
 
@@ -467,10 +461,14 @@ namespace Lucinda.Protocol.X3DH
         /// </summary>
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(X3DHKeyAgreement));
             }
+#endif
         }
 
         /// <inheritdoc/>

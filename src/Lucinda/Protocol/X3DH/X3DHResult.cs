@@ -19,27 +19,19 @@ namespace Lucinda.Protocol.X3DH
     /// </list>
     /// </para>
     /// </remarks>
-    public sealed class X3DHResult
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="X3DHResult"/> class.
+    /// </remarks>
+    /// <param name="sharedSecret">The derived shared secret.</param>
+    /// <param name="associatedData">The associated data for authentication.</param>
+    /// <param name="ephemeralPublicKey">The ephemeral public key (initiator only).</param>
+    /// <param name="usedOneTimePreKeyId">The ID of the used one-time pre-key, if any.</param>
+    public sealed class X3DHResult(
+        byte[] sharedSecret,
+        byte[] associatedData,
+        byte[]? ephemeralPublicKey = null,
+        int? usedOneTimePreKeyId = null)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="X3DHResult"/> class.
-        /// </summary>
-        /// <param name="sharedSecret">The derived shared secret.</param>
-        /// <param name="associatedData">The associated data for authentication.</param>
-        /// <param name="ephemeralPublicKey">The ephemeral public key (initiator only).</param>
-        /// <param name="usedOneTimePreKeyId">The ID of the used one-time pre-key, if any.</param>
-        public X3DHResult(
-            byte[] sharedSecret,
-            byte[] associatedData,
-            byte[]? ephemeralPublicKey = null,
-            int? usedOneTimePreKeyId = null)
-        {
-            SharedSecret = sharedSecret ?? throw new ArgumentNullException(nameof(sharedSecret));
-            AssociatedData = associatedData ?? throw new ArgumentNullException(nameof(associatedData));
-            EphemeralPublicKey = ephemeralPublicKey;
-            UsedOneTimePreKeyId = usedOneTimePreKeyId;
-        }
-
         /// <summary>
         /// Gets the derived shared secret from the X3DH key agreement.
         /// </summary>
@@ -47,7 +39,7 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// This shared secret should be used to initialize the Double Ratchet algorithm.
         /// </remarks>
-        public byte[] SharedSecret { get; }
+        public byte[] SharedSecret { get; } = sharedSecret ?? throw new ArgumentNullException(nameof(sharedSecret));
 
         /// <summary>
         /// Gets the associated data that should be authenticated with messages.
@@ -57,7 +49,7 @@ namespace Lucinda.Protocol.X3DH
         /// Typically contains the concatenated identity public keys of both parties.
         /// This data is included in the AEAD encryption to provide authentication.
         /// </remarks>
-        public byte[] AssociatedData { get; }
+        public byte[] AssociatedData { get; } = associatedData ?? throw new ArgumentNullException(nameof(associatedData));
 
         /// <summary>
         /// Gets the initiator's ephemeral public key.
@@ -66,7 +58,7 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// This key must be sent to the responder as part of the initial message.
         /// </remarks>
-        public byte[]? EphemeralPublicKey { get; }
+        public byte[]? EphemeralPublicKey { get; } = ephemeralPublicKey;
 
         /// <summary>
         /// Gets the ID of the one-time pre-key that was used, if any.
@@ -76,7 +68,7 @@ namespace Lucinda.Protocol.X3DH
         /// This ID should be sent to the responder so they know which one-time pre-key
         /// to use for completing the key agreement.
         /// </remarks>
-        public int? UsedOneTimePreKeyId { get; }
+        public int? UsedOneTimePreKeyId { get; } = usedOneTimePreKeyId;
 
         /// <summary>
         /// Gets a value indicating whether a one-time pre-key was used.

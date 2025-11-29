@@ -23,68 +23,58 @@ namespace Lucinda.Protocol.X3DH
     /// </list>
     /// </para>
     /// </remarks>
-    public sealed class PreKeyBundle
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="PreKeyBundle"/> class.
+    /// </remarks>
+    /// <param name="identityKey">The long-term identity public key.</param>
+    /// <param name="signedPreKey">The signed pre-key public key.</param>
+    /// <param name="signedPreKeySignature">The signature over the signed pre-key.</param>
+    /// <param name="signedPreKeyId">The identifier for the signed pre-key.</param>
+    /// <param name="oneTimePreKey">Optional one-time pre-key public key.</param>
+    /// <param name="oneTimePreKeyId">Optional identifier for the one-time pre-key.</param>
+    public sealed class PreKeyBundle(
+        byte[] identityKey,
+        byte[] signedPreKey,
+        byte[] signedPreKeySignature,
+        int signedPreKeyId,
+        byte[]? oneTimePreKey = null,
+        int? oneTimePreKeyId = null)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PreKeyBundle"/> class.
-        /// </summary>
-        /// <param name="identityKey">The long-term identity public key.</param>
-        /// <param name="signedPreKey">The signed pre-key public key.</param>
-        /// <param name="signedPreKeySignature">The signature over the signed pre-key.</param>
-        /// <param name="signedPreKeyId">The identifier for the signed pre-key.</param>
-        /// <param name="oneTimePreKey">Optional one-time pre-key public key.</param>
-        /// <param name="oneTimePreKeyId">Optional identifier for the one-time pre-key.</param>
-        public PreKeyBundle(
-            byte[] identityKey,
-            byte[] signedPreKey,
-            byte[] signedPreKeySignature,
-            int signedPreKeyId,
-            byte[]? oneTimePreKey = null,
-            int? oneTimePreKeyId = null)
-        {
-            IdentityKey = identityKey ?? throw new ArgumentNullException(nameof(identityKey));
-            SignedPreKey = signedPreKey ?? throw new ArgumentNullException(nameof(signedPreKey));
-            SignedPreKeySignature = signedPreKeySignature ?? throw new ArgumentNullException(nameof(signedPreKeySignature));
-            SignedPreKeyId = signedPreKeyId;
-            OneTimePreKey = oneTimePreKey;
-            OneTimePreKeyId = oneTimePreKeyId;
-        }
-
         /// <summary>
         /// Gets the long-term identity public key (IK).
         /// </summary>
         /// <value>The identity public key bytes.</value>
-        public byte[] IdentityKey { get; }
+        public byte[] IdentityKey { get; } = identityKey ?? throw new ArgumentNullException(nameof(identityKey));
 
         /// <summary>
         /// Gets the signed pre-key public key (SPK).
         /// </summary>
         /// <value>The signed pre-key public key bytes.</value>
-        public byte[] SignedPreKey { get; }
+        public byte[] SignedPreKey { get; } = signedPreKey ?? throw new ArgumentNullException(nameof(signedPreKey));
 
         /// <summary>
         /// Gets the signature over the signed pre-key, created with the identity key.
         /// </summary>
         /// <value>The signature bytes.</value>
-        public byte[] SignedPreKeySignature { get; }
+        public byte[] SignedPreKeySignature { get; } = signedPreKeySignature ?? throw new ArgumentNullException(nameof(signedPreKeySignature));
 
         /// <summary>
         /// Gets the identifier for the signed pre-key.
         /// </summary>
         /// <value>The signed pre-key ID.</value>
-        public int SignedPreKeyId { get; }
+        public int SignedPreKeyId { get; } = signedPreKeyId;
 
         /// <summary>
         /// Gets the one-time pre-key public key (OPK), if available.
         /// </summary>
         /// <value>The one-time pre-key public key bytes, or null if not available.</value>
-        public byte[]? OneTimePreKey { get; }
+        public byte[]? OneTimePreKey { get; } = oneTimePreKey;
 
         /// <summary>
         /// Gets the identifier for the one-time pre-key, if available.
         /// </summary>
         /// <value>The one-time pre-key ID, or null if not available.</value>
-        public int? OneTimePreKeyId { get; }
+        public int? OneTimePreKeyId { get; } = oneTimePreKeyId;
 
         /// <summary>
         /// Gets a value indicating whether this bundle contains a one-time pre-key.
@@ -100,41 +90,34 @@ namespace Lucinda.Protocol.X3DH
     /// This class is used by the bundle owner to store the private keys needed to
     /// complete the X3DH key agreement when receiving an initial message.
     /// </remarks>
-    public sealed class PreKeyBundleWithPrivateKeys
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="PreKeyBundleWithPrivateKeys"/> class.
+    /// </remarks>
+    /// <param name="bundle">The public pre-key bundle.</param>
+    /// <param name="signedPreKeyPrivate">The private key for the signed pre-key.</param>
+    /// <param name="oneTimePreKeyPrivates">Dictionary of one-time pre-key private keys by ID.</param>
+    public sealed class PreKeyBundleWithPrivateKeys(
+        PreKeyBundle bundle,
+        byte[] signedPreKeyPrivate,
+        Dictionary<int, byte[]>? oneTimePreKeyPrivates = null)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PreKeyBundleWithPrivateKeys"/> class.
-        /// </summary>
-        /// <param name="bundle">The public pre-key bundle.</param>
-        /// <param name="signedPreKeyPrivate">The private key for the signed pre-key.</param>
-        /// <param name="oneTimePreKeyPrivates">Dictionary of one-time pre-key private keys by ID.</param>
-        public PreKeyBundleWithPrivateKeys(
-            PreKeyBundle bundle,
-            byte[] signedPreKeyPrivate,
-            Dictionary<int, byte[]>? oneTimePreKeyPrivates = null)
-        {
-            Bundle = bundle ?? throw new ArgumentNullException(nameof(bundle));
-            SignedPreKeyPrivate = signedPreKeyPrivate ?? throw new ArgumentNullException(nameof(signedPreKeyPrivate));
-            OneTimePreKeyPrivates = oneTimePreKeyPrivates ?? new Dictionary<int, byte[]>();
-        }
-
         /// <summary>
         /// Gets the public pre-key bundle.
         /// </summary>
         /// <value>The pre-key bundle.</value>
-        public PreKeyBundle Bundle { get; }
+        public PreKeyBundle Bundle { get; } = bundle ?? throw new ArgumentNullException(nameof(bundle));
 
         /// <summary>
         /// Gets the private key for the signed pre-key.
         /// </summary>
         /// <value>The signed pre-key private key bytes.</value>
-        public byte[] SignedPreKeyPrivate { get; }
+        public byte[] SignedPreKeyPrivate { get; } = signedPreKeyPrivate ?? throw new ArgumentNullException(nameof(signedPreKeyPrivate));
 
         /// <summary>
         /// Gets the dictionary of one-time pre-key private keys, keyed by ID.
         /// </summary>
         /// <value>The one-time pre-key private keys.</value>
-        public Dictionary<int, byte[]> OneTimePreKeyPrivates { get; }
+        public Dictionary<int, byte[]> OneTimePreKeyPrivates { get; } = oneTimePreKeyPrivates ?? [];
 
         /// <summary>
         /// Gets the one-time pre-key private key for the specified ID.

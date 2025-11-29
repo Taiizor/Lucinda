@@ -4,10 +4,10 @@
 // </copyright>
 
 #if NET6_0_OR_GREATER
-using System.Security.Cryptography;
-
 using Lucinda.Abstractions;
 using Lucinda.KeyDerivation;
+using Lucinda.Symmetric;
+using System.Security.Cryptography;
 
 namespace Lucinda.Protocol.DoubleRatchet
 {
@@ -23,9 +23,13 @@ namespace Lucinda.Protocol.DoubleRatchet
     /// </list>
     /// </para>
     /// </remarks>
-    public sealed class KdfChain : IKdfChain, IDisposable
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="KdfChain"/> class.
+    /// </remarks>
+    /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
+    public sealed class KdfChain(HashAlgorithmName? hashAlgorithm = null) : IKdfChain, IDisposable
     {
-        private readonly HkdfKeyDerivation _hkdf;
+        private readonly HkdfKeyDerivation _hkdf = new(hashAlgorithm ?? HashAlgorithmName.SHA256);
         private bool _disposed;
 
         /// <summary>
@@ -36,21 +40,12 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// <summary>
         /// Constant for message key derivation.
         /// </summary>
-        private static readonly byte[] MessageKeyConstant = new byte[] { 0x01 };
+        private static readonly byte[] MessageKeyConstant = [0x01];
 
         /// <summary>
         /// Constant for chain key derivation.
         /// </summary>
-        private static readonly byte[] ChainKeyConstant = new byte[] { 0x02 };
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KdfChain"/> class.
-        /// </summary>
-        /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
-        public KdfChain(HashAlgorithmName? hashAlgorithm = null)
-        {
-            _hkdf = new HkdfKeyDerivation(hashAlgorithm ?? HashAlgorithmName.SHA256);
-        }
+        private static readonly byte[] ChainKeyConstant = [0x02];
 
         /// <inheritdoc/>
         public string AlgorithmName => _hkdf.AlgorithmName;
@@ -198,10 +193,14 @@ namespace Lucinda.Protocol.DoubleRatchet
         /// </summary>
         private void ThrowIfDisposed()
         {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_disposed, this);
+#else
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(KdfChain));
             }
+#endif
         }
 
         /// <inheritdoc/>
