@@ -55,11 +55,6 @@ namespace Lucinda.Benchmarks
         private HeaderEncryption _headerEncryption = null!;
         private RatchetHeader _testHeader = null!;
 
-        // Group Session fields
-        private GroupSession _groupAlice = null!;
-        private GroupSession _groupBob = null!;
-        private GroupSession _groupCharlie = null!;
-
         /// <summary>
         /// Setup benchmark data and instances.
         /// </summary>
@@ -115,27 +110,6 @@ namespace Lucinda.Benchmarks
             _headerEncryption = HeaderEncryption.Initialize(headerRootKey).Value!;
             using System.Security.Cryptography.ECDiffieHellman tempEcdh = System.Security.Cryptography.ECDiffieHellman.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
             _testHeader = new RatchetHeader(tempEcdh.PublicKey.ExportSubjectPublicKeyInfo(), 0, 1);
-
-            // Setup Group Sessions
-            _groupAlice = new GroupSession("benchmark-group", "alice");
-            _groupBob = new GroupSession("benchmark-group", "bob");
-            _groupCharlie = new GroupSession("benchmark-group", "charlie");
-
-            _groupAlice.Initialize();
-            _groupBob.Initialize();
-            _groupCharlie.Initialize();
-
-            // Exchange distribution messages
-            SenderKeyDistributionData aliceDist = _groupAlice.CreateDistributionMessage().Value!;
-            SenderKeyDistributionData bobDist = _groupBob.CreateDistributionMessage().Value!;
-            SenderKeyDistributionData charlieDist = _groupCharlie.CreateDistributionMessage().Value!;
-
-            _groupAlice.ProcessDistributionMessage("bob", bobDist);
-            _groupAlice.ProcessDistributionMessage("charlie", charlieDist);
-            _groupBob.ProcessDistributionMessage("alice", aliceDist);
-            _groupBob.ProcessDistributionMessage("charlie", charlieDist);
-            _groupCharlie.ProcessDistributionMessage("alice", aliceDist);
-            _groupCharlie.ProcessDistributionMessage("bob", bobDist);
         }
 
         /// <summary>
@@ -152,9 +126,6 @@ namespace Lucinda.Benchmarks
             _aliceRatchetState?.Dispose();
             _bobRatchetState?.Dispose();
             _headerEncryption?.Dispose();
-            _groupAlice?.Dispose();
-            _groupBob?.Dispose();
-            _groupCharlie?.Dispose();
         }
 
         // ==================== Pre-Key Bundle Generation ====================
@@ -326,30 +297,48 @@ namespace Lucinda.Benchmarks
 
         /// <summary>
         /// Benchmark group message encryption (small message - 64 bytes).
+        /// Note: Creates fresh session each time because chain key advances and would exhaust after 2000 iterations.
         /// </summary>
         [Benchmark(Description = "GroupSession Encrypt (64B)")]
         public GroupMessage GroupSession_Encrypt_Small()
         {
-            return _groupAlice.Encrypt(_smallMessage).Value!;
+            using GroupSession session = new("benchmark-group", "sender");
+            session.Initialize();
+            return session.Encrypt(_smallMessage).Value!;
         }
 
         /// <summary>
         /// Benchmark group message encryption (medium message - 1KB).
+        /// Note: Creates fresh session each time because chain key advances and would exhaust after 2000 iterations.
         /// </summary>
         [Benchmark(Description = "GroupSession Encrypt (1KB)")]
         public GroupMessage GroupSession_Encrypt_Medium()
         {
-            return _groupAlice.Encrypt(_mediumMessage).Value!;
+            using GroupSession session = new("benchmark-group", "sender");
+            session.Initialize();
+            return session.Encrypt(_mediumMessage).Value!;
         }
 
         /// <summary>
-        /// Benchmark group message round-trip: encrypt by Alice, decrypt by Bob.
+        /// Benchmark group message round-trip: encrypt + decrypt.
+        /// Note: Creates fresh sessions each time because chain state advances.
         /// </summary>
         [Benchmark(Description = "GroupSession Round-Trip")]
         public byte[] GroupSession_RoundTrip()
         {
-            GroupMessage encrypted = _groupAlice.Encrypt(_smallMessage).Value!;
-            return _groupBob.Decrypt(encrypted).Value!;
+            using GroupSession sender = new("benchmark-group", "alice");
+            using GroupSession receiver = new("benchmark-group", "bob");
+
+            sender.Initialize();
+            receiver.Initialize();
+
+            // Exchange distribution messages
+            SenderKeyDistributionData senderDist = sender.CreateDistributionMessage().Value!;
+            receiver.ProcessDistributionMessage("alice", senderDist);
+
+            // Encrypt and decrypt
+            GroupMessage encrypted = sender.Encrypt(_smallMessage).Value!;
+            return receiver.Decrypt(encrypted).Value!;
         }
 
         /// <summary>
