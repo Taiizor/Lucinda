@@ -37,8 +37,11 @@ A comprehensive end-to-end encryption (E2EE) library for .NET, providing secure 
   - X3DH (Extended Triple Diffie-Hellman) key agreement
   - Double Ratchet algorithm for forward-secure messaging
   - Pre-key bundles for asynchronous session establishment
+  - **Header Encryption**: Protects message metadata (ratchet keys, counters)
+  - **Sender Keys Protocol**: Efficient group messaging with `GroupSession`
   - Forward Secrecy: Past messages remain secure if keys are compromised
   - Post-Compromise Security: Future messages become secure after compromise
+  - **Extensibility**: `ICurve25519` and `IEdDSA` interfaces for custom cryptographic providers
 
 ## Supported Platforms
 
@@ -113,6 +116,36 @@ bob.CreateSessionFromInitialMessage("alice", initialMessage.Value);
 var encrypted = alice.SendMessage("bob", "Hello with forward secrecy!");
 var decrypted = bob.ReceiveMessage("alice", encrypted.Value);
 Console.WriteLine(decrypted.Value); // "Hello with forward secrecy!"
+```
+
+### Group Messaging (Sender Keys Protocol)
+
+```csharp
+using Lucinda.Protocol.SenderKeys;
+
+// Create group sessions for each participant
+using var alice = new GroupSession("my-group-123", "alice");
+using var bob = new GroupSession("my-group-123", "bob");
+using var charlie = new GroupSession("my-group-123", "charlie");
+
+// Initialize sender keys
+alice.Initialize();
+bob.Initialize();
+charlie.Initialize();
+
+// Exchange distribution messages (each participant shares their sender key)
+var aliceDist = alice.CreateDistributionMessage();
+var bobDist = bob.CreateDistributionMessage();
+
+alice.ProcessDistributionMessage("bob", bobDist.Value);
+bob.ProcessDistributionMessage("alice", aliceDist.Value);
+
+// Alice sends encrypted message to the group (single encryption for all recipients)
+var groupMessage = alice.Encrypt(Encoding.UTF8.GetBytes("Hello group!"));
+
+// Bob decrypts the group message
+var decrypted = bob.Decrypt(groupMessage.Value);
+Console.WriteLine(Encoding.UTF8.GetString(decrypted.Value)); // "Hello group!"
 ```
 
 ### Symmetric Encryption (AES-GCM)
@@ -306,6 +339,8 @@ result.Match(
 | `SecureMessaging` | Signal Protocol-like secure messaging |
 | `X3DHKeyAgreement` | X3DH key agreement protocol |
 | `DoubleRatchet` | Double Ratchet algorithm |
+| `HeaderEncryption` | Header encryption for metadata protection |
+| `GroupSession` | Sender Keys protocol for group messaging |
 
 ### Interfaces
 
@@ -322,6 +357,10 @@ result.Match(
 | `IDoubleRatchet` | Contract for Double Ratchet |
 | `IKdfChain` | Contract for KDF chain operations |
 | `ISessionStorage` | Contract for session storage |
+| `IHeaderEncryption` | Contract for header encryption |
+| `IGroupSession` | Contract for group messaging sessions |
+| `ICurve25519` | Contract for X25519 key exchange (extensibility) |
+| `IEdDSA` | Contract for Ed25519 signatures (extensibility) |
 
 ## License
 

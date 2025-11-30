@@ -10,6 +10,7 @@ using BenchmarkDotNet.Order;
 using Lucinda.Abstractions;
 using Lucinda.KeyExchange;
 using Lucinda.Protocol.DoubleRatchet;
+using Lucinda.Protocol.SenderKeys;
 using Lucinda.Protocol.X3DH;
 
 namespace Lucinda.Benchmarks
@@ -49,6 +50,15 @@ namespace Lucinda.Benchmarks
         private RatchetState _aliceRatchetState = null!;
         private RatchetState _bobRatchetState = null!;
         private byte[] _sharedSecret = null!;
+
+        // Header Encryption fields
+        private HeaderEncryption _headerEncryption = null!;
+        private RatchetHeader _testHeader = null!;
+
+        // Group Session fields
+        private GroupSession _groupAlice = null!;
+        private GroupSession _groupBob = null!;
+        private GroupSession _groupCharlie = null!;
 
         /// <summary>
         /// Setup benchmark data and instances.
@@ -99,6 +109,33 @@ namespace Lucinda.Benchmarks
                 _bobPreKeyBundleWithKeys.Bundle.SignedPreKey,
                 _bobPreKeyBundleWithKeys.SignedPreKeyPrivate);
             _bobRatchetState = _doubleRatchet.InitializeAsResponder(_sharedSecret, bobSignedPreKeyPair).Value;
+
+            // Setup Header Encryption
+            byte[] headerRootKey = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+            _headerEncryption = HeaderEncryption.Initialize(headerRootKey).Value!;
+            using System.Security.Cryptography.ECDiffieHellman tempEcdh = System.Security.Cryptography.ECDiffieHellman.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+            _testHeader = new RatchetHeader(tempEcdh.PublicKey.ExportSubjectPublicKeyInfo(), 0, 1);
+
+            // Setup Group Sessions
+            _groupAlice = new GroupSession("benchmark-group", "alice");
+            _groupBob = new GroupSession("benchmark-group", "bob");
+            _groupCharlie = new GroupSession("benchmark-group", "charlie");
+
+            _groupAlice.Initialize();
+            _groupBob.Initialize();
+            _groupCharlie.Initialize();
+
+            // Exchange distribution messages
+            SenderKeyDistributionData aliceDist = _groupAlice.CreateDistributionMessage().Value!;
+            SenderKeyDistributionData bobDist = _groupBob.CreateDistributionMessage().Value!;
+            SenderKeyDistributionData charlieDist = _groupCharlie.CreateDistributionMessage().Value!;
+
+            _groupAlice.ProcessDistributionMessage("bob", bobDist);
+            _groupAlice.ProcessDistributionMessage("charlie", charlieDist);
+            _groupBob.ProcessDistributionMessage("alice", aliceDist);
+            _groupBob.ProcessDistributionMessage("charlie", charlieDist);
+            _groupCharlie.ProcessDistributionMessage("alice", aliceDist);
+            _groupCharlie.ProcessDistributionMessage("bob", bobDist);
         }
 
         /// <summary>
@@ -114,6 +151,10 @@ namespace Lucinda.Benchmarks
             _ecdh?.Dispose();
             _aliceRatchetState?.Dispose();
             _bobRatchetState?.Dispose();
+            _headerEncryption?.Dispose();
+            _groupAlice?.Dispose();
+            _groupBob?.Dispose();
+            _groupCharlie?.Dispose();
         }
 
         // ==================== Pre-Key Bundle Generation ====================
@@ -248,6 +289,78 @@ namespace Lucinda.Benchmarks
         {
             byte[] encrypted = _alice.SendMessage("bob", "Round-trip benchmark message").Value;
             return _bob.ReceiveMessage("alice", encrypted).Value;
+        }
+
+        // ==================== Header Encryption Operations ====================
+
+        /// <summary>
+        /// Benchmark header encryption operation.
+        /// </summary>
+        [Benchmark(Description = "Header Encrypt")]
+        public EncryptedHeader HeaderEncryption_Encrypt()
+        {
+            return _headerEncryption.EncryptHeader(_testHeader).Value!;
+        }
+
+        /// <summary>
+        /// Benchmark header encryption + decryption round-trip.
+        /// </summary>
+        [Benchmark(Description = "Header Encrypt+Decrypt")]
+        public RatchetHeader HeaderEncryption_RoundTrip()
+        {
+            EncryptedHeader encrypted = _headerEncryption.EncryptHeader(_testHeader).Value!;
+            return _headerEncryption.DecryptHeader(encrypted).Value!;
+        }
+
+        // ==================== Group Session (Sender Keys) Operations ====================
+
+        /// <summary>
+        /// Benchmark group session initialization.
+        /// </summary>
+        [Benchmark(Description = "GroupSession Init")]
+        public bool GroupSession_Initialize()
+        {
+            using GroupSession session = new("benchmark-group", "test-user");
+            return session.Initialize().Value;
+        }
+
+        /// <summary>
+        /// Benchmark group message encryption (small message - 64 bytes).
+        /// </summary>
+        [Benchmark(Description = "GroupSession Encrypt (64B)")]
+        public GroupMessage GroupSession_Encrypt_Small()
+        {
+            return _groupAlice.Encrypt(_smallMessage).Value!;
+        }
+
+        /// <summary>
+        /// Benchmark group message encryption (medium message - 1KB).
+        /// </summary>
+        [Benchmark(Description = "GroupSession Encrypt (1KB)")]
+        public GroupMessage GroupSession_Encrypt_Medium()
+        {
+            return _groupAlice.Encrypt(_mediumMessage).Value!;
+        }
+
+        /// <summary>
+        /// Benchmark group message round-trip: encrypt by Alice, decrypt by Bob.
+        /// </summary>
+        [Benchmark(Description = "GroupSession Round-Trip")]
+        public byte[] GroupSession_RoundTrip()
+        {
+            GroupMessage encrypted = _groupAlice.Encrypt(_smallMessage).Value!;
+            return _groupBob.Decrypt(encrypted).Value!;
+        }
+
+        /// <summary>
+        /// Benchmark distribution message creation.
+        /// </summary>
+        [Benchmark(Description = "GroupSession Distribution")]
+        public SenderKeyDistributionData GroupSession_CreateDistribution()
+        {
+            using GroupSession session = new("benchmark-group", "test-user");
+            session.Initialize();
+            return session.CreateDistributionMessage().Value!;
         }
     }
 }

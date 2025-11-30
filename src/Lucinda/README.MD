@@ -16,6 +16,9 @@ A comprehensive end-to-end encryption (E2EE) library for .NET, providing secure 
 - **Key Derivation**: PBKDF2 and HKDF
 - **Secure Key Storage**: In-memory storage with secure clearing
 - **Signal Protocol-like Messaging**: X3DH + Double Ratchet with forward secrecy
+- **Header Encryption**: Protects message metadata from observation
+- **Sender Keys Protocol**: Efficient group messaging with `GroupSession`
+- **Extensibility**: `ICurve25519` and `IEdDSA` interfaces for custom providers
 
 ## Supported Platforms
 
@@ -187,6 +190,8 @@ result.Match(
 | `SecureMessaging` | Signal Protocol-like secure messaging |
 | `X3DHKeyAgreement` | X3DH key agreement |
 | `DoubleRatchet` | Double Ratchet algorithm |
+| `HeaderEncryption` | Header encryption for metadata protection |
+| `GroupSession` | Sender Keys protocol for group messaging |
 
 ## Security Considerations
 
