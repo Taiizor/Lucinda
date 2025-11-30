@@ -1,0 +1,749 @@
+@page "/crypto-test"
+@using Lucinda.Blazor.Abstractions
+@using Lucinda.Blazor.Interop
+@inject IBlazorSymmetricEncryption SymmetricEncryption
+@inject IBlazorAsymmetricEncryption AsymmetricEncryption
+@inject IBlazorKeyExchange KeyExchange
+@inject IBlazorSignature Signature
+@inject IBlazorKeyDerivation KeyDerivation
+@inject IBlazorPasswordKeyDerivation PasswordKeyDerivation
+@inject IBlazorSecureRandom SecureRandom
+@inject IBlazorHash Hash
+@inject IBlazorHybridEncryption HybridEncryption
+@inject IBlazorSecureKeyStorage KeyStorage
+@inject IBlazorSessionStorage SessionStorage
+
+<PageTitle>Web Crypto API Test</PageTitle>
+
+<h1>🔐 Lucinda.Blazor - Comprehensive Web Crypto API Test</h1>
+
+<div class="alert @GetStatusClass()">
+    <strong>Status:</strong> @_statusMessage
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-primary me-2" @onclick="RunAllTests" disabled="@_isRunning">
+        @if (_isRunning)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        }
+        Run All Tests
+    </button>
+    <button class="btn btn-secondary" @onclick="ClearResults" disabled="@_isRunning">
+        Clear Results
+    </button>
+    <a href="/protocol-test" class="btn btn-outline-success ms-2">Signal Protocol Tests →</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🔑 AES-GCM Encryption</h5>
+            </div>
+            <div class="card-body">
+                @if (_aesResult != null)
+                {
+                    <p><small><strong>Original:</strong> @TruncateText(_testMessage, 50)</small></p>
+                    <p><small><strong>Encrypted:</strong> <code>@TruncateText(_aesResult.Ciphertext, 40)</code></small></p>
+                    <p><small><strong>Decrypted:</strong> @TruncateText(_aesResult.Decrypted, 50)</small></p>
+                    <p class="@(_aesResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_aesResult.Success ? "✅ Passed" : $"❌ Failed: {_aesResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🔐 RSA-OAEP Encryption</h5>
+            </div>
+            <div class="card-body">
+                @if (_rsaResult != null)
+                {
+                    <p><small><strong>Key Size:</strong> @_rsaResult.KeySize bits</small></p>
+                    <p><small><strong>Original:</strong> @TruncateText(_testMessage, 50)</small></p>
+                    <p><small><strong>Decrypted:</strong> @TruncateText(_rsaResult.Decrypted, 50)</small></p>
+                    <p class="@(_rsaResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_rsaResult.Success ? "✅ Passed" : $"❌ Failed: {_rsaResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">🔀 Hybrid Encryption (RSA+AES)</h5>
+            </div>
+            <div class="card-body">
+                @if (_hybridResult != null)
+                {
+                    <p><small><strong>Original:</strong> @TruncateText(_testMessage, 50)</small></p>
+                    <p><small><strong>Encrypted Key Size:</strong> @_hybridResult.EncryptedKeySize bytes</small></p>
+                    <p><small><strong>Decrypted:</strong> @TruncateText(_hybridResult.Decrypted, 50)</small></p>
+                    <p class="@(_hybridResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_hybridResult.Success ? "✅ Passed" : $"❌ Failed: {_hybridResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">🤝 ECDH Key Exchange</h5>
+            </div>
+            <div class="card-body">
+                @if (_ecdhResult != null)
+                {
+                    <p><small><strong>Curve:</strong> P-256</small></p>
+                    <p><small><strong>Alice Public Key:</strong> @_ecdhResult.AlicePublicKeyLength bytes</small></p>
+                    <p><small><strong>Bob Public Key:</strong> @_ecdhResult.BobPublicKeyLength bytes</small></p>
+                    <p><small><strong>Shared Secret:</strong> @_ecdhResult.SharedSecretLength bytes</small></p>
+                    <p><small><strong>Secrets Match:</strong> @_ecdhResult.SecretsMatch</small></p>
+                    <p class="@(_ecdhResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_ecdhResult.Success ? "✅ Passed" : $"❌ Failed: {_ecdhResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">✍️ ECDSA Signature</h5>
+            </div>
+            <div class="card-body">
+                @if (_ecdsaResult != null)
+                {
+                    <p><small><strong>Message:</strong> @TruncateText(_testMessage, 40)</small></p>
+                    <p><small><strong>Signature:</strong> <code>@TruncateText(_ecdsaResult.Signature, 30)</code></small></p>
+                    <p><small><strong>Verified:</strong> @(_ecdsaResult.Verified ? "Valid ✓" : "Invalid ✗")</small></p>
+                    <p class="@(_ecdsaResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_ecdsaResult.Success ? "✅ Passed" : $"❌ Failed: {_ecdsaResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">📝 RSA-PSS Signature</h5>
+            </div>
+            <div class="card-body">
+                @if (_rsaPssResult != null)
+                {
+                    <p><small><strong>Message:</strong> @TruncateText(_testMessage, 40)</small></p>
+                    <p><small><strong>Signature:</strong> <code>@TruncateText(_rsaPssResult.Signature, 30)</code></small></p>
+                    <p><small><strong>Verified:</strong> @(_rsaPssResult.Verified ? "Valid ✓" : "Invalid ✗")</small></p>
+                    <p class="@(_rsaPssResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_rsaPssResult.Success ? "✅ Passed" : $"❌ Failed: {_rsaPssResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">🔧 HKDF Key Derivation</h5>
+            </div>
+            <div class="card-body">
+                @if (_hkdfResult != null)
+                {
+                    <p><small><strong>Input Key:</strong> @_hkdfResult.InputKeyLength bytes</small></p>
+                    <p><small><strong>Salt:</strong> @_hkdfResult.SaltLength bytes</small></p>
+                    <p><small><strong>Derived Key:</strong> @_hkdfResult.DerivedKeyLength bytes</small></p>
+                    <p><small><strong>Key (hex):</strong> <code>@TruncateText(_hkdfResult.DerivedKeyHex, 32)</code></small></p>
+                    <p class="@(_hkdfResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_hkdfResult.Success ? "✅ Passed" : $"❌ Failed: {_hkdfResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">🔑 PBKDF2 Password Derivation</h5>
+            </div>
+            <div class="card-body">
+                @if (_pbkdf2Result != null)
+                {
+                    <p><small><strong>Password:</strong> @_pbkdf2Result.Password</small></p>
+                    <p><small><strong>Iterations:</strong> @_pbkdf2Result.Iterations</small></p>
+                    <p><small><strong>Derived Key:</strong> @_pbkdf2Result.DerivedKeyLength bytes</small></p>
+                    <p><small><strong>Key (hex):</strong> <code>@TruncateText(_pbkdf2Result.DerivedKeyHex, 32)</code></small></p>
+                    <p class="@(_pbkdf2Result.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_pbkdf2Result.Success ? "✅ Passed" : $"❌ Failed: {_pbkdf2Result.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">🎲 Secure Random</h5>
+            </div>
+            <div class="card-body">
+                @if (_randomResult != null)
+                {
+                    <p><small><strong>16 bytes (hex):</strong> <code>@_randomResult.Random16Hex</code></small></p>
+                    <p><small><strong>32 bytes (hex):</strong> <code>@TruncateText(_randomResult.Random32Hex, 32)</code></small></p>
+                    <p><small><strong>Random Int:</strong> @_randomResult.RandomInt</small></p>
+                    <p class="@(_randomResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_randomResult.Success ? "✅ Passed" : $"❌ Failed: {_randomResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">#️⃣ Hash Functions</h5>
+            </div>
+            <div class="card-body">
+                @if (_hashResult != null)
+                {
+                    <p><small><strong>Input:</strong> @TruncateText(_testMessage, 40)</small></p>
+                    <p><small><strong>SHA-256:</strong> <code>@TruncateText(_hashResult.Sha256, 32)</code></small></p>
+                    <p class="@(_hashResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_hashResult.Success ? "✅ Passed" : $"❌ Failed: {_hashResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">💾 IndexedDB Key Storage</h5>
+            </div>
+            <div class="card-body">
+                @if (_keyStorageResult != null)
+                {
+                    <p><small><strong>Key ID:</strong> @TruncateText(_keyStorageResult.KeyId, 20)</small></p>
+                    <p><small><strong>Stored:</strong> @(_keyStorageResult.Stored ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Retrieved:</strong> @(_keyStorageResult.Retrieved ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Keys Match:</strong> @(_keyStorageResult.KeysMatch ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Deleted:</strong> @(_keyStorageResult.Deleted ? "Yes ✓" : "No ✗")</small></p>
+                    <p class="@(_keyStorageResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_keyStorageResult.Success ? "✅ Passed" : $"❌ Failed: {_keyStorageResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">📦 IndexedDB Session Storage</h5>
+            </div>
+            <div class="card-body">
+                @if (_sessionStorageResult != null)
+                {
+                    <p><small><strong>Session ID:</strong> @TruncateText(_sessionStorageResult.SessionId, 20)</small></p>
+                    <p><small><strong>Stored:</strong> @(_sessionStorageResult.Stored ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Retrieved:</strong> @(_sessionStorageResult.Retrieved ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Data Match:</strong> @(_sessionStorageResult.DataMatch ? "Yes ✓" : "No ✗")</small></p>
+                    <p><small><strong>Deleted:</strong> @(_sessionStorageResult.Deleted ? "Yes ✓" : "No ✗")</small></p>
+                    <p class="@(_sessionStorageResult.Success ? "text-success" : "text-danger") mb-0">
+                        <strong>@(_sessionStorageResult.Success ? "✅ Passed" : $"❌ Failed: {_sessionStorageResult.Error}")</strong>
+                    </p>
+                }
+                else { <p class="text-muted">Not tested yet</p> }
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mt-4">Test Summary</h4>
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Test</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>AES-GCM Encryption</td><td>@GetStatusBadge(_aesResult?.Success)</td><td>@(_aesResult?.Error ?? "Symmetric authenticated encryption")</td></tr>
+            <tr><td>RSA-OAEP Encryption</td><td>@GetStatusBadge(_rsaResult?.Success)</td><td>@(_rsaResult?.Error ?? "Asymmetric encryption")</td></tr>
+            <tr><td>Hybrid Encryption</td><td>@GetStatusBadge(_hybridResult?.Success)</td><td>@(_hybridResult?.Error ?? "RSA + AES combined encryption")</td></tr>
+            <tr><td>ECDH Key Exchange</td><td>@GetStatusBadge(_ecdhResult?.Success)</td><td>@(_ecdhResult?.Error ?? "Elliptic Curve Diffie-Hellman")</td></tr>
+            <tr><td>ECDSA Signature</td><td>@GetStatusBadge(_ecdsaResult?.Success)</td><td>@(_ecdsaResult?.Error ?? "Elliptic Curve Digital Signature")</td></tr>
+            <tr><td>RSA-PSS Signature</td><td>@GetStatusBadge(_rsaPssResult?.Success)</td><td>@(_rsaPssResult?.Error ?? "RSA Probabilistic Signature Scheme")</td></tr>
+            <tr><td>HKDF Key Derivation</td><td>@GetStatusBadge(_hkdfResult?.Success)</td><td>@(_hkdfResult?.Error ?? "HMAC-based Key Derivation Function")</td></tr>
+            <tr><td>PBKDF2 Password Derivation</td><td>@GetStatusBadge(_pbkdf2Result?.Success)</td><td>@(_pbkdf2Result?.Error ?? "Password-Based Key Derivation")</td></tr>
+            <tr><td>Secure Random</td><td>@GetStatusBadge(_randomResult?.Success)</td><td>@(_randomResult?.Error ?? "Cryptographically secure random")</td></tr>
+            <tr><td>Hash Functions</td><td>@GetStatusBadge(_hashResult?.Success)</td><td>@(_hashResult?.Error ?? "SHA-256")</td></tr>
+            <tr><td>Key Storage (IndexedDB)</td><td>@GetStatusBadge(_keyStorageResult?.Success)</td><td>@(_keyStorageResult?.Error ?? "Browser-based key persistence")</td></tr>
+            <tr><td>Session Storage (IndexedDB)</td><td>@GetStatusBadge(_sessionStorageResult?.Success)</td><td>@(_sessionStorageResult?.Error ?? "Browser-based session persistence")</td></tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private bool _isRunning = false;
+    private string _status = "info";
+    private string _statusMessage = "Tests not started. Click 'Run All Tests' to begin.";
+    private string _testMessage = "Hello, Lucinda.Blazor! This is a test message for Web Crypto API.";
+
+    private AesTestResult? _aesResult;
+    private RsaTestResult? _rsaResult;
+    private HybridTestResult? _hybridResult;
+    private EcdhTestResult? _ecdhResult;
+    private EcdsaTestResult? _ecdsaResult;
+    private RsaPssTestResult? _rsaPssResult;
+    private HkdfTestResult? _hkdfResult;
+    private Pbkdf2TestResult? _pbkdf2Result;
+    private RandomTestResult? _randomResult;
+    private HashTestResult? _hashResult;
+    private KeyStorageTestResult? _keyStorageResult;
+    private SessionStorageTestResult? _sessionStorageResult;
+
+    private string GetStatusClass() => _status switch
+    {
+        "success" => "alert-success",
+        "error" => "alert-danger",
+        "warning" => "alert-warning",
+        _ => "alert-info"
+    };
+
+    private MarkupString GetStatusBadge(bool? success) => success switch
+    {
+        true => new MarkupString("<span class='badge bg-success'>✓ Pass</span>"),
+        false => new MarkupString("<span class='badge bg-danger'>✗ Fail</span>"),
+        null => new MarkupString("<span class='badge bg-secondary'>—</span>")
+    };
+
+    private string TruncateText(string? text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        return text.Length <= maxLength ? text : text[..maxLength] + "...";
+    }
+
+    private void ClearResults()
+    {
+        _aesResult = null;
+        _rsaResult = null;
+        _hybridResult = null;
+        _ecdhResult = null;
+        _ecdsaResult = null;
+        _rsaPssResult = null;
+        _hkdfResult = null;
+        _pbkdf2Result = null;
+        _randomResult = null;
+        _hashResult = null;
+        _keyStorageResult = null;
+        _sessionStorageResult = null;
+        _status = "info";
+        _statusMessage = "Results cleared. Click 'Run All Tests' to begin.";
+    }
+
+    private async Task RunAllTests()
+    {
+        _isRunning = true;
+        _status = "info";
+        _statusMessage = "Running tests...";
+        StateHasChanged();
+
+        int passed = 0, failed = 0;
+
+        try
+        {
+            _statusMessage = "Testing AES-GCM..."; StateHasChanged();
+            _aesResult = await TestAesGcm();
+            if (_aesResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing RSA-OAEP..."; StateHasChanged();
+            _rsaResult = await TestRsaOaep();
+            if (_rsaResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing Hybrid Encryption..."; StateHasChanged();
+            _hybridResult = await TestHybridEncryption();
+            if (_hybridResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing ECDH..."; StateHasChanged();
+            _ecdhResult = await TestEcdh();
+            if (_ecdhResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing ECDSA..."; StateHasChanged();
+            _ecdsaResult = await TestEcdsa();
+            if (_ecdsaResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing RSA-PSS..."; StateHasChanged();
+            _rsaPssResult = await TestRsaPss();
+            if (_rsaPssResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing HKDF..."; StateHasChanged();
+            _hkdfResult = await TestHkdf();
+            if (_hkdfResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing PBKDF2..."; StateHasChanged();
+            _pbkdf2Result = await TestPbkdf2();
+            if (_pbkdf2Result.Success) passed++; else failed++;
+
+            _statusMessage = "Testing Secure Random..."; StateHasChanged();
+            _randomResult = await TestSecureRandom();
+            if (_randomResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing Hash..."; StateHasChanged();
+            _hashResult = await TestHash();
+            if (_hashResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing Key Storage..."; StateHasChanged();
+            _keyStorageResult = await TestKeyStorage();
+            if (_keyStorageResult.Success) passed++; else failed++;
+
+            _statusMessage = "Testing Session Storage..."; StateHasChanged();
+            _sessionStorageResult = await TestSessionStorage();
+            if (_sessionStorageResult.Success) passed++; else failed++;
+
+            _status = failed == 0 ? "success" : (passed > 0 ? "warning" : "error");
+            _statusMessage = $"Tests completed: {passed} passed, {failed} failed out of {passed + failed} total.";
+        }
+        catch (Exception ex)
+        {
+            _status = "error";
+            _statusMessage = $"Test execution error: {ex.Message}";
+        }
+        finally
+        {
+            _isRunning = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<AesTestResult> TestAesGcm()
+    {
+        try
+        {
+            var plaintext = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var keyResult = await SymmetricEncryption.GenerateKeyAsync();
+            if (!keyResult.IsSuccess) return new AesTestResult { Error = keyResult.Error };
+
+            var encryptResult = await SymmetricEncryption.EncryptAsync(plaintext, keyResult.Value!);
+            if (!encryptResult.IsSuccess) return new AesTestResult { Error = encryptResult.Error };
+
+            var decryptResult = await SymmetricEncryption.DecryptAsync(encryptResult.Value!, keyResult.Value!);
+            if (!decryptResult.IsSuccess) return new AesTestResult { Error = decryptResult.Error };
+
+            var decryptedText = System.Text.Encoding.UTF8.GetString(decryptResult.Value!);
+            return new AesTestResult
+            {
+                Ciphertext = Convert.ToBase64String(encryptResult.Value!),
+                Decrypted = decryptedText,
+                Success = decryptedText == _testMessage
+            };
+        }
+        catch (Exception ex) { return new AesTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<RsaTestResult> TestRsaOaep()
+    {
+        try
+        {
+            var plaintext = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var keyPairResult = await AsymmetricEncryption.GenerateKeyPairAsync();
+            if (!keyPairResult.IsSuccess) return new RsaTestResult { Error = keyPairResult.Error };
+
+            var encryptResult = await AsymmetricEncryption.EncryptAsync(plaintext, keyPairResult.Value!.PublicKey);
+            if (!encryptResult.IsSuccess) return new RsaTestResult { Error = encryptResult.Error };
+
+            var decryptResult = await AsymmetricEncryption.DecryptAsync(encryptResult.Value!, keyPairResult.Value!.PrivateKey);
+            if (!decryptResult.IsSuccess) return new RsaTestResult { Error = decryptResult.Error };
+
+            var decryptedText = System.Text.Encoding.UTF8.GetString(decryptResult.Value!);
+            return new RsaTestResult
+            {
+                KeySize = AsymmetricEncryption.KeySize,
+                Decrypted = decryptedText,
+                Success = decryptedText == _testMessage
+            };
+        }
+        catch (Exception ex) { return new RsaTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<HybridTestResult> TestHybridEncryption()
+    {
+        try
+        {
+            var plaintext = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var keyPair = await HybridEncryption.GenerateKeyPairAsync();
+
+            var encryptedData = await HybridEncryption.EncryptAsync(plaintext, keyPair.PublicKey);
+            var decrypted = await HybridEncryption.DecryptAsync(encryptedData, keyPair.PrivateKey);
+
+            var decryptedText = System.Text.Encoding.UTF8.GetString(decrypted);
+            return new HybridTestResult
+            {
+                EncryptedKeySize = encryptedData.EncapsulatedKey.Length,
+                Decrypted = decryptedText,
+                Success = decryptedText == _testMessage
+            };
+        }
+        catch (Exception ex) { return new HybridTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<EcdhTestResult> TestEcdh()
+    {
+        try
+        {
+            var aliceKeyPairResult = await KeyExchange.GenerateKeyPairAsync();
+            var bobKeyPairResult = await KeyExchange.GenerateKeyPairAsync();
+            if (!aliceKeyPairResult.IsSuccess) return new EcdhTestResult { Error = aliceKeyPairResult.Error };
+            if (!bobKeyPairResult.IsSuccess) return new EcdhTestResult { Error = bobKeyPairResult.Error };
+
+            var aliceSecretResult = await KeyExchange.DeriveSharedSecretAsync(
+                aliceKeyPairResult.Value!.PrivateKey, bobKeyPairResult.Value!.PublicKey);
+            var bobSecretResult = await KeyExchange.DeriveSharedSecretAsync(
+                bobKeyPairResult.Value!.PrivateKey, aliceKeyPairResult.Value!.PublicKey);
+
+            if (!aliceSecretResult.IsSuccess) return new EcdhTestResult { Error = aliceSecretResult.Error };
+            if (!bobSecretResult.IsSuccess) return new EcdhTestResult { Error = bobSecretResult.Error };
+
+            var secretsMatch = aliceSecretResult.Value!.SequenceEqual(bobSecretResult.Value!);
+            return new EcdhTestResult
+            {
+                AlicePublicKeyLength = aliceKeyPairResult.Value!.PublicKey.Length,
+                BobPublicKeyLength = bobKeyPairResult.Value!.PublicKey.Length,
+                SharedSecretLength = aliceSecretResult.Value!.Length,
+                SecretsMatch = secretsMatch,
+                Success = secretsMatch
+            };
+        }
+        catch (Exception ex) { return new EcdhTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<EcdsaTestResult> TestEcdsa()
+    {
+        try
+        {
+            var message = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var keyPairResult = await Signature.GenerateKeyPairAsync();
+            if (!keyPairResult.IsSuccess) return new EcdsaTestResult { Error = keyPairResult.Error };
+
+            var signResult = await Signature.SignAsync(message, keyPairResult.Value!.PrivateKey);
+            if (!signResult.IsSuccess) return new EcdsaTestResult { Error = signResult.Error };
+
+            var verifyResult = await Signature.VerifyAsync(message, signResult.Value!, keyPairResult.Value!.PublicKey);
+            if (!verifyResult.IsSuccess) return new EcdsaTestResult { Error = verifyResult.Error };
+
+            return new EcdsaTestResult
+            {
+                Signature = Convert.ToBase64String(signResult.Value!),
+                Verified = verifyResult.Value,
+                Success = verifyResult.Value
+            };
+        }
+        catch (Exception ex) { return new EcdsaTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<RsaPssTestResult> TestRsaPss()
+    {
+        try
+        {
+            var webCrypto = ((Lucinda.Blazor.Signatures.BlazorEcdsaSignature)Signature)
+                .GetType().GetField("_webCrypto", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(Signature) as WebCryptoInterop;
+            
+            if (webCrypto == null)
+                return new RsaPssTestResult { Error = "Could not access WebCryptoInterop" };
+
+            var message = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var keyPair = await webCrypto.GenerateRsaSignatureKeyPairAsync(2048, "SHA-256");
+            var signature = await webCrypto.RsaPssSignAsync(keyPair.PrivateKey, message, "SHA-256", 32);
+            var verified = await webCrypto.RsaPssVerifyAsync(keyPair.PublicKey, message, signature, "SHA-256", 32);
+
+            return new RsaPssTestResult
+            {
+                Signature = Convert.ToBase64String(signature),
+                Verified = verified,
+                Success = verified
+            };
+        }
+        catch (Exception ex) { return new RsaPssTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<HkdfTestResult> TestHkdf()
+    {
+        try
+        {
+            var inputKeyResult = await SecureRandom.GenerateBytesAsync(32);
+            if (!inputKeyResult.IsSuccess) return new HkdfTestResult { Error = inputKeyResult.Error };
+
+            var saltResult = await SecureRandom.GenerateBytesAsync(16);
+            if (!saltResult.IsSuccess) return new HkdfTestResult { Error = saltResult.Error };
+
+            var info = System.Text.Encoding.UTF8.GetBytes("test-context");
+            var derivedResult = await KeyDerivation.DeriveKeyAsync(inputKeyResult.Value!, saltResult.Value!, info, 32);
+            if (!derivedResult.IsSuccess) return new HkdfTestResult { Error = derivedResult.Error };
+
+            return new HkdfTestResult
+            {
+                InputKeyLength = inputKeyResult.Value!.Length,
+                SaltLength = saltResult.Value!.Length,
+                DerivedKeyLength = derivedResult.Value!.Length,
+                DerivedKeyHex = Convert.ToHexString(derivedResult.Value!),
+                Success = derivedResult.Value!.Length == 32
+            };
+        }
+        catch (Exception ex) { return new HkdfTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<Pbkdf2TestResult> TestPbkdf2()
+    {
+        try
+        {
+            var password = "SecurePassword123!";
+            var saltResult = await SecureRandom.GenerateBytesAsync(16);
+            if (!saltResult.IsSuccess) return new Pbkdf2TestResult { Error = saltResult.Error };
+
+            var derivedResult = await PasswordKeyDerivation.DeriveKeyAsync(password, saltResult.Value!, 32);
+            if (!derivedResult.IsSuccess) return new Pbkdf2TestResult { Error = derivedResult.Error };
+
+            return new Pbkdf2TestResult
+            {
+                Password = password,
+                Iterations = 600000,
+                DerivedKeyLength = derivedResult.Value!.Length,
+                DerivedKeyHex = Convert.ToHexString(derivedResult.Value!),
+                Success = derivedResult.Value!.Length == 32
+            };
+        }
+        catch (Exception ex) { return new Pbkdf2TestResult { Error = ex.Message }; }
+    }
+
+    private async Task<RandomTestResult> TestSecureRandom()
+    {
+        try
+        {
+            var random16Result = await SecureRandom.GenerateBytesAsync(16);
+            var random32Result = await SecureRandom.GenerateBytesAsync(32);
+            var randomIntResult = await SecureRandom.NextIntAsync(0, 1000000);
+
+            if (!random16Result.IsSuccess) return new RandomTestResult { Error = random16Result.Error };
+            if (!random32Result.IsSuccess) return new RandomTestResult { Error = random32Result.Error };
+            if (!randomIntResult.IsSuccess) return new RandomTestResult { Error = randomIntResult.Error };
+
+            return new RandomTestResult
+            {
+                Random16Hex = Convert.ToHexString(random16Result.Value!),
+                Random32Hex = Convert.ToHexString(random32Result.Value!),
+                RandomInt = randomIntResult.Value,
+                Success = random16Result.Value!.Length == 16 && random32Result.Value!.Length == 32
+            };
+        }
+        catch (Exception ex) { return new RandomTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<HashTestResult> TestHash()
+    {
+        try
+        {
+            var data = System.Text.Encoding.UTF8.GetBytes(_testMessage);
+            var sha256Result = await Hash.ComputeHashAsync(data);
+            if (!sha256Result.IsSuccess) return new HashTestResult { Error = sha256Result.Error };
+
+            return new HashTestResult
+            {
+                Sha256 = Convert.ToHexString(sha256Result.Value!),
+                Success = sha256Result.Value!.Length == 32
+            };
+        }
+        catch (Exception ex) { return new HashTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<KeyStorageTestResult> TestKeyStorage()
+    {
+        try
+        {
+            var keyId = $"test-key-{Guid.NewGuid():N}";
+            var keyData = System.Text.Encoding.UTF8.GetBytes("test-key-material-12345678901234");
+
+            var metadata = new BlazorKeyMetadata
+            {
+                KeyId = keyId,
+                Algorithm = "AES-GCM",
+                KeyType = BlazorKeyType.Symmetric,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var stored = await KeyStorage.StoreKeyAsync(keyId, keyData, metadata);
+            var retrieved = await KeyStorage.RetrieveKeyAsync(keyId);
+            var keysMatch = retrieved != null && retrieved.SequenceEqual(keyData);
+            await KeyStorage.DeleteKeyAsync(keyId);
+            var afterDelete = await KeyStorage.RetrieveKeyAsync(keyId);
+
+            return new KeyStorageTestResult
+            {
+                KeyId = keyId,
+                Stored = stored,
+                Retrieved = retrieved != null,
+                KeysMatch = keysMatch,
+                Deleted = afterDelete == null,
+                Success = stored && keysMatch && afterDelete == null
+            };
+        }
+        catch (Exception ex) { return new KeyStorageTestResult { Error = ex.Message }; }
+    }
+
+    private async Task<SessionStorageTestResult> TestSessionStorage()
+    {
+        try
+        {
+            var sessionId = $"test-session-{Guid.NewGuid():N}";
+            var sessionData = System.Text.Encoding.UTF8.GetBytes("{\"test\":\"session-data\"}");
+
+            var stored = await SessionStorage.StoreSessionAsync(sessionId, sessionData);
+            var retrieved = await SessionStorage.LoadSessionAsync(sessionId);
+            var dataMatch = retrieved != null && retrieved.SequenceEqual(sessionData);
+            await SessionStorage.DeleteSessionAsync(sessionId);
+            var afterDelete = await SessionStorage.LoadSessionAsync(sessionId);
+
+            return new SessionStorageTestResult
+            {
+                SessionId = sessionId,
+                Stored = stored,
+                Retrieved = retrieved != null,
+                DataMatch = dataMatch,
+                Deleted = afterDelete == null,
+                Success = stored && dataMatch && afterDelete == null
+            };
+        }
+        catch (Exception ex) { return new SessionStorageTestResult { Error = ex.Message }; }
+    }
+
+    // Result classes
+    private class AesTestResult { public string Ciphertext { get; set; } = ""; public string Decrypted { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class RsaTestResult { public int KeySize { get; set; } public string Decrypted { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class HybridTestResult { public int EncryptedKeySize { get; set; } public string Decrypted { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class EcdhTestResult { public int AlicePublicKeyLength { get; set; } public int BobPublicKeyLength { get; set; } public int SharedSecretLength { get; set; } public bool SecretsMatch { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+    private class EcdsaTestResult { public string Signature { get; set; } = ""; public bool Verified { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+    private class RsaPssTestResult { public string Signature { get; set; } = ""; public bool Verified { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+    private class HkdfTestResult { public int InputKeyLength { get; set; } public int SaltLength { get; set; } public int DerivedKeyLength { get; set; } public string DerivedKeyHex { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class Pbkdf2TestResult { public string Password { get; set; } = ""; public int Iterations { get; set; } public int DerivedKeyLength { get; set; } public string DerivedKeyHex { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class RandomTestResult { public string Random16Hex { get; set; } = ""; public string Random32Hex { get; set; } = ""; public int RandomInt { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+    private class HashTestResult { public string Sha256 { get; set; } = ""; public bool Success { get; set; } public string? Error { get; set; } }
+    private class KeyStorageTestResult { public string KeyId { get; set; } = ""; public bool Stored { get; set; } public bool Retrieved { get; set; } public bool KeysMatch { get; set; } public bool Deleted { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+    private class SessionStorageTestResult { public string SessionId { get; set; } = ""; public bool Stored { get; set; } public bool Retrieved { get; set; } public bool DataMatch { get; set; } public bool Deleted { get; set; } public bool Success { get; set; } public string? Error { get; set; } }
+}

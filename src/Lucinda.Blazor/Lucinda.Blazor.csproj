@@ -1,0 +1,121 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <RootNamespace>Lucinda.Blazor</RootNamespace>
+        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+        <AssemblyName>Lucinda.Blazor</AssemblyName>
+        <DefaultLanguage>en-GB</DefaultLanguage>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>1.0.1</Version>
+        <AssemblyVersion>$(Version)</AssemblyVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Lucinda.Blazor</Title>
+        <PackageId>Lucinda.Blazor</PackageId>
+        <Authors>Lucinda Contributors</Authors>
+        <Product>Lucinda.Blazor</Product>
+        <Copyright>Copyright © $([System.DateTime]::Today.ToString(yyyy)) $(Authors)</Copyright>
+        <Summary>Blazor WebAssembly support for Lucinda E2EE library using Web Crypto API.</Summary>
+        <Description>Lucinda.Blazor provides end-to-end encryption (E2EE) capabilities for Blazor WebAssembly applications using the native Web Crypto API.
+
+Key Features:
+• AES-GCM and AES-CBC symmetric encryption via Web Crypto API
+• RSA-OAEP asymmetric encryption
+• ECDH key exchange (P-256/P-384/P-521 curves)
+• ECDSA digital signatures
+• HKDF and PBKDF2 key derivation
+• Secure random number generation
+• IndexedDB-based secure key storage
+• Signal Protocol support (X3DH, Double Ratchet, Sender Keys)
+
+Advantages:
+• Zero external dependencies - uses browser's native crypto
+• Hardware-accelerated encryption (AES-NI)
+• No timing attacks (native implementation)
+• Compatible with Lucinda for server-side interop
+
+Platform Support: Blazor WebAssembly on .NET 8.0-10.0</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression></PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageTags>blazor;wasm;webassembly;encryption;cryptography;e2ee;end-to-end-encryption;web-crypto;security;aes;aes-gcm;rsa;ecdh;ecdsa;hkdf;pbkdf2;lucinda</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageProjectUrl>https://github.com/Taiizor/Lucinda</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>git://github.com/Taiizor/Lucinda</RepositoryUrl>
+        <PackageDescription>$(Description)</PackageDescription>
+        <PackageIcon>Lucinda.png</PackageIcon>
+        <Company>$(Authors)</Company>
+        <Owners>$(Authors)</Owners>
+        <LangVersion>preview</LangVersion>
+        <AnalysisLevel>preview</AnalysisLevel>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <NeutralLanguage>$(DefaultLanguage)</NeutralLanguage>
+        <FileVersion>$(Version)</FileVersion>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Configurations>Debug;Release</Configurations>
+        <NoWarn>$(NoWarn);CS8002</NoWarn>
+        <WarningsAsErrors>CS1591</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    </PropertyGroup>
+
+    <!-- AOT Support for .NET 8.0+ -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">
+        <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <IsAotCompatible>true</IsAotCompatible>
+        <IsTrimmable>true</IsTrimmable>
+    </PropertyGroup>
+
+    <!-- Source Link for debugging -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub">
+            <Version>8.0.0</Version>
+            <PrivateAssets>All</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <!-- Package References -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.22" Condition="'$(TargetFramework)' == 'net8.0'" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.11" Condition="'$(TargetFramework)' == 'net9.0'" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
+    </ItemGroup>
+
+    <!-- Project Reference to core Lucinda for shared types -->
+    <ItemGroup>
+        <ProjectReference Include="..\Lucinda\Lucinda.csproj" />
+    </ItemGroup>
+
+    <!-- Package content -->
+    <ItemGroup>
+        <None Include="README.MD">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+        <None Include="..\..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+        <None Include="Resources\Lucinda.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Properties\" />
+    </ItemGroup>
+
+</Project>
