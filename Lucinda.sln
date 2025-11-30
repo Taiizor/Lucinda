@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucinda.Benchmarks", "bench
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucinda.Samples.SecureMessaging", "samples\Lucinda.Samples.SecureMessaging\Lucinda.Samples.SecureMessaging.csproj", "{26BD58DF-3A1D-424C-B08D-C137192FFFD4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lucinda.Samples.SignalProtocol", "samples\Lucinda.Samples.SignalProtocol\Lucinda.Samples.SignalProtocol.csproj", "{DBFC5515-018C-4873-BF29-88CBA22B101F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -142,6 +144,18 @@ Global
 		{26BD58DF-3A1D-424C-B08D-C137192FFFD4}.Release|x64.Build.0 = Release|Any CPU
 		{26BD58DF-3A1D-424C-B08D-C137192FFFD4}.Release|x86.ActiveCfg = Release|Any CPU
 		{26BD58DF-3A1D-424C-B08D-C137192FFFD4}.Release|x86.Build.0 = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|x64.Build.0 = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Debug|x86.Build.0 = Debug|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|x64.ActiveCfg = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|x64.Build.0 = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|x86.ActiveCfg = Release|Any CPU
+		{DBFC5515-018C-4873-BF29-88CBA22B101F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -156,6 +170,7 @@ Global
 		{5238FD68-0D26-4DEF-83F1-F3806A61381E} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{16277390-5B83-BBB5-3614-F25AB983BE7C} = {86FDAC33-520E-4895-BAE0-253344E6AE13}
 		{26BD58DF-3A1D-424C-B08D-C137192FFFD4} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{DBFC5515-018C-4873-BF29-88CBA22B101F} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A8D1E176-D5EA-41C2-8AD3-AE4C4E96DDDF}
