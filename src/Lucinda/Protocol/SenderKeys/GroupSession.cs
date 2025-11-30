@@ -190,7 +190,7 @@ namespace Lucinda.Protocol.SenderKeys
                     byte[] tag = new byte[TagSize];
 
 #if NET8_0_OR_GREATER
-                    using var aesGcm = new AesGcm(messageKey, TagSize);
+                    using AesGcm aesGcm = new(messageKey, TagSize);
 #else
                     using AesGcm aesGcm = new(messageKey);
 #endif
@@ -299,7 +299,7 @@ namespace Lucinda.Protocol.SenderKeys
                     byte[] plaintext = new byte[message.Ciphertext.Length];
 
 #if NET8_0_OR_GREATER
-                    using var aesGcm = new AesGcm(messageKey, TagSize);
+                    using AesGcm aesGcm = new(messageKey, TagSize);
 #else
                     using AesGcm aesGcm = new(messageKey);
 #endif

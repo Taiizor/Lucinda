@@ -123,7 +123,7 @@ namespace Lucinda.Protocol.DoubleRatchet
                 byte[] tag = new byte[TagSize];
 
 #if NET8_0_OR_GREATER
-                using var aesGcm = new AesGcm(_headerKey, TagSize);
+                using AesGcm aesGcm = new(_headerKey, TagSize);
 #else
                 using AesGcm aesGcm = new(_headerKey);
 #endif
@@ -197,7 +197,7 @@ namespace Lucinda.Protocol.DoubleRatchet
                 byte[] plaintext = new byte[encryptedHeader.Ciphertext.Length];
 
 #if NET8_0_OR_GREATER
-                using var aesGcm = new AesGcm(key, TagSize);
+                using AesGcm aesGcm = new(key, TagSize);
 #else
                 using AesGcm aesGcm = new(key);
 #endif
