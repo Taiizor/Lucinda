@@ -13,6 +13,7 @@ using System.Text;
 #endif
 
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 
 namespace Lucinda.KeyDerivation
@@ -34,13 +35,23 @@ namespace Lucinda.KeyDerivation
     /// <item><description>Hash: SHA-256 or SHA-512</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
+    /// </para>
     /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="Pbkdf2KeyDerivation"/> class.
-    /// </remarks>
-    /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
-    public sealed class Pbkdf2KeyDerivation(HashAlgorithmName? hashAlgorithm = null) : IKeyDerivation
+    public sealed class Pbkdf2KeyDerivation : IKeyDerivation
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Pbkdf2KeyDerivation"/> class.
+        /// </summary>
+        /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
+        public Pbkdf2KeyDerivation(HashAlgorithmName? hashAlgorithm = null)
+        {
+            CryptoPlatform.ThrowIfBrowser("Pbkdf2KeyDerivation");
+            _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;
+        }
+
         /// <summary>
         /// The minimum recommended number of iterations.
         /// </summary>
@@ -56,7 +67,7 @@ namespace Lucinda.KeyDerivation
         /// </summary>
         public const int DefaultSaltLength = 32;
 
-        private readonly HashAlgorithmName _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;
+        private readonly HashAlgorithmName _hashAlgorithm;
         private bool _disposed;
 
         /// <inheritdoc/>

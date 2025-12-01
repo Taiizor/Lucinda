@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 #endif
 
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 
 namespace Lucinda.Symmetric
@@ -54,8 +55,10 @@ namespace Lucinda.Symmetric
         /// </summary>
         /// <param name="keySizeInBits">The key size in bits (128, 192, or 256). Default is 256.</param>
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public AesGcmEncryption(int keySizeInBits = 256)
         {
+            CryptoPlatform.ThrowIfBrowser("AesGcmEncryption");
             ValidateKeySize(keySizeInBits);
             KeySizeInBits = keySizeInBits;
             _key = SecureRandom.GenerateKey(keySizeInBits);
@@ -67,8 +70,10 @@ namespace Lucinda.Symmetric
         /// <param name="key">The AES key to use for encryption and decryption.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public AesGcmEncryption(byte[] key)
         {
+            CryptoPlatform.ThrowIfBrowser("AesGcmEncryption");
 #if NET6_0_OR_GREATER
             ArgumentNullException.ThrowIfNull(key);
 #else

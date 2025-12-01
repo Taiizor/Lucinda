@@ -5,6 +5,7 @@
 
 #if NETCOREAPP3_0_OR_GREATER || NET5_0_OR_GREATER
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 using System.Security.Cryptography;
 
@@ -28,6 +29,7 @@ namespace Lucinda.Asymmetric
     /// </para>
     /// <para>
     /// Note: This class is only available on .NET Core 3.0+ and .NET 5.0+.
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
     /// </para>
     /// </remarks>
     public sealed class RsaEncryption : IAsymmetricEncryption
@@ -42,8 +44,10 @@ namespace Lucinda.Asymmetric
         /// <param name="keySizeInBits">The key size in bits (2048, 3072, or 4096). Default is 2048.</param>
         /// <param name="padding">The padding mode to use. Default is OAEP with SHA-256.</param>
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public RsaEncryption(int keySizeInBits = 2048, RSAEncryptionPadding? padding = null)
         {
+            CryptoPlatform.ThrowIfBrowser("RsaEncryption");
             ValidateKeySize(keySizeInBits);
             KeySizeInBits = keySizeInBits;
             _padding = padding ?? RSAEncryptionPadding.OaepSHA256;

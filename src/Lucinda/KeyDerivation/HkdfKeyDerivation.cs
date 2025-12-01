@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 #endif
 
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 
 namespace Lucinda.KeyDerivation
@@ -30,6 +31,9 @@ namespace Lucinda.KeyDerivation
     /// <item><description>Expand: Takes PRK and optional info, produces output key material</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
+    /// </para>
     /// </remarks>
     public sealed class HkdfKeyDerivation : IKeyDerivation
     {
@@ -41,8 +45,10 @@ namespace Lucinda.KeyDerivation
         /// Initializes a new instance of the <see cref="HkdfKeyDerivation"/> class.
         /// </summary>
         /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public HkdfKeyDerivation(HashAlgorithmName? hashAlgorithm = null)
         {
+            CryptoPlatform.ThrowIfBrowser("HkdfKeyDerivation");
             _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;
             _hashLength = GetHashLength(_hashAlgorithm);
         }

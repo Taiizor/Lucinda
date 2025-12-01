@@ -5,6 +5,7 @@
 
 #if NETCOREAPP3_0_OR_GREATER || NET5_0_OR_GREATER
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 using System.Security.Cryptography;
 
@@ -24,6 +25,9 @@ namespace Lucinda.Signatures
     /// <item><description>PKCS#1 v1.5 - Legacy, deterministic signatures</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
+    /// </para>
     /// </remarks>
     public sealed class RsaSignature : IDigitalSignature
     {
@@ -39,11 +43,13 @@ namespace Lucinda.Signatures
         /// <param name="hashAlgorithm">The hash algorithm to use. Default is SHA-256.</param>
         /// <param name="padding">The padding mode to use. Default is PSS.</param>
         /// <exception cref="ArgumentException">Thrown when the key size is not valid.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public RsaSignature(
             int keySizeInBits = 2048,
             HashAlgorithmName? hashAlgorithm = null,
             RSASignaturePadding? padding = null)
         {
+            CryptoPlatform.ThrowIfBrowser("RsaSignature");
             ValidateKeySize(keySizeInBits);
             KeySizeInBits = keySizeInBits;
             _hashAlgorithm = hashAlgorithm ?? HashAlgorithmName.SHA256;

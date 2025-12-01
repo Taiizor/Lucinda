@@ -6,6 +6,7 @@
 #if NET6_0_OR_GREATER
 using Lucinda.Abstractions;
 using Lucinda.KeyDerivation;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 using System.Security.Cryptography;
 
@@ -30,6 +31,7 @@ namespace Lucinda.KeyExchange
     /// </para>
     /// <para>
     /// Note: This class is only available on .NET 6.0 and later.
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
     /// </para>
     /// </remarks>
     public sealed class EcdhKeyExchange : IKeyExchange
@@ -42,8 +44,10 @@ namespace Lucinda.KeyExchange
         /// Initializes a new instance of the <see cref="EcdhKeyExchange"/> class with a new key pair.
         /// </summary>
         /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public EcdhKeyExchange(ECCurve? curve = null)
         {
+            CryptoPlatform.ThrowIfBrowser("EcdhKeyExchange");
             _curve = curve ?? ECCurve.NamedCurves.nistP256;
             KeySizeInBits = GetKeySizeForCurve(_curve);
             _ecdh = ECDiffieHellman.Create(_curve);
@@ -55,8 +59,10 @@ namespace Lucinda.KeyExchange
         /// </summary>
         /// <param name="ecdh">The ECDH instance to use.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="ecdh"/> is null.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public EcdhKeyExchange(ECDiffieHellman ecdh)
         {
+            CryptoPlatform.ThrowIfBrowser("EcdhKeyExchange");
             _ecdh = ecdh ?? throw new ArgumentNullException(nameof(ecdh));
             KeySizeInBits = ecdh.KeySize;
             _curve = GetCurveForKeySize(KeySizeInBits);

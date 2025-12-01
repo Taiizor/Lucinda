@@ -5,6 +5,7 @@
 
 #if NETCOREAPP3_0_OR_GREATER || NET5_0_OR_GREATER
 using Lucinda.Abstractions;
+using Lucinda.Platform;
 using Lucinda.Utilities;
 using System.Security.Cryptography;
 
@@ -26,6 +27,9 @@ namespace Lucinda.Signatures
     /// <item><description>P-521 (NIST P-521, secp521r1)</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// For Blazor WebAssembly, use <see cref="ICryptoProvider"/> to get a browser-compatible implementation.
+    /// </para>
     /// </remarks>
     public sealed class EcdsaSignature : IDigitalSignature
     {
@@ -39,8 +43,10 @@ namespace Lucinda.Signatures
         /// </summary>
         /// <param name="curve">The elliptic curve to use. Default is P-256.</param>
         /// <param name="hashAlgorithm">The hash algorithm to use. If null, selects based on curve.</param>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public EcdsaSignature(ECCurve? curve = null, HashAlgorithmName? hashAlgorithm = null)
         {
+            CryptoPlatform.ThrowIfBrowser("EcdsaSignature");
             _curve = curve ?? ECCurve.NamedCurves.nistP256;
             KeySizeInBits = GetKeySizeForCurve(_curve);
             _hashAlgorithm = hashAlgorithm ?? GetHashAlgorithmForCurve(KeySizeInBits);
@@ -54,8 +60,10 @@ namespace Lucinda.Signatures
         /// <param name="ecdsa">The ECDSA instance to use.</param>
         /// <param name="hashAlgorithm">The hash algorithm to use. If null, selects based on key size.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="ecdsa"/> is null.</exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown when running in Blazor WebAssembly. Use <see cref="ICryptoProvider"/> instead.</exception>
         public EcdsaSignature(ECDsa ecdsa, HashAlgorithmName? hashAlgorithm = null)
         {
+            CryptoPlatform.ThrowIfBrowser("EcdsaSignature");
             _ecdsa = ecdsa ?? throw new ArgumentNullException(nameof(ecdsa));
             KeySizeInBits = ecdsa.KeySize;
             _curve = GetCurveForKeySize(KeySizeInBits);

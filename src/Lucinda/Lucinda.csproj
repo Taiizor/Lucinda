@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>net48;net481;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
-        <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <DefaultLanguage>en-GB</DefaultLanguage>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>Lucinda</RootNamespace>
@@ -116,6 +116,11 @@ Result Pattern: CryptoResult&lt;T&gt; for explicit error handling without except
         <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_1</DefineConstants>
     </PropertyGroup>
 
+    <!-- Define BROWSER constant for conditional compilation when targeting browser -->
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
+        <DefineConstants>$(DefineConstants);BROWSER</DefineConstants>
+    </PropertyGroup>
+
     <!-- Package references for older frameworks -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
         <PackageReference Include="System.Memory" Version="4.6.3" />
@@ -125,6 +130,11 @@ Result Pattern: CryptoResult&lt;T&gt; for explicit error handling without except
     <!-- Nullable reference types support for older frameworks -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'net481' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
         <PackageReference Include="Nullable" Version="1.3.1" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- Include JavaScript files for Blazor WebAssembly -->
+    <ItemGroup>
+        <Content Include="wwwroot\**\*" Pack="true" PackagePath="staticwebassets" />
     </ItemGroup>
 
     <!-- Package content -->
