@@ -1,9 +1,7 @@
-// -----------------------------------------------------------------------
-// <copyright file="HeaderEncryption.cs" company="Taiizor">
-// Copyright (c) Taiizor. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root.
+// <copyright file="HeaderEncryption.cs" company="Lucinda">
+// Copyright (c) Lucinda. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
-// -----------------------------------------------------------------------
 
 #if NET6_0_OR_GREATER
 using Lucinda.Abstractions;
