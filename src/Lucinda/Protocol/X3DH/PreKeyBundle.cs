@@ -43,10 +43,42 @@ namespace Lucinda.Protocol.X3DH
         /// Using SortedDictionary ensures O(log n) operations and deterministic ordering.
         /// </summary>
         private readonly SortedDictionary<int, byte[]> _oneTimePreKeys =
-            oneTimePreKeys != null
-                ? new SortedDictionary<int, byte[]>(oneTimePreKeys.ToDictionary(kvp => kvp.Key, kvp => (byte[])kvp.Value.Clone()))
-                : [];
+            ValidateOneTimePreKeys(oneTimePreKeys);
 
+        private static SortedDictionary<int, byte[]> ValidateOneTimePreKeys(IDictionary<int, byte[]>? oneTimePreKeys)
+        {
+            if (oneTimePreKeys is null || oneTimePreKeys.Count == 0)
+            {
+                return new SortedDictionary<int, byte[]>();
+            }
+
+            var validated = new SortedDictionary<int, byte[]>();
+
+            foreach (var kvp in oneTimePreKeys)
+            {
+                if (kvp.Key <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(oneTimePreKeys),
+                        $"One-time pre-key ID must be a positive integer. Invalid ID: {kvp.Key}.");
+                }
+
+                var value = kvp.Value ?? throw new ArgumentException(
+                    "One-time pre-key value cannot be null.",
+                    nameof(oneTimePreKeys));
+
+                if (value.Length == 0)
+                {
+                    throw new ArgumentException(
+                        "One-time pre-key value cannot be an empty byte array.",
+                        nameof(oneTimePreKeys));
+                }
+
+                validated.Add(kvp.Key, (byte[])value.Clone());
+            }
+
+            return validated;
+        }
         /// <summary>
         /// Gets the long-term identity public key (IK).
         /// </summary>
