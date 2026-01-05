@@ -117,14 +117,12 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
         {
-            // SortedDictionary.Keys is already sorted, First() returns smallest key
-            using IEnumerator<KeyValuePair<int, byte[]>> enumerator = _oneTimePreKeys.GetEnumerator();
-            if (!enumerator.MoveNext())
+            if (_oneTimePreKeys.Count == 0)
             {
                 return null;
             }
 
-            KeyValuePair<int, byte[]> first = enumerator.Current;
+            KeyValuePair<int, byte[]> first = _oneTimePreKeys.First();
             _oneTimePreKeys.Remove(first.Key);
             return (first.Key, (byte[])first.Value.Clone());
         }
