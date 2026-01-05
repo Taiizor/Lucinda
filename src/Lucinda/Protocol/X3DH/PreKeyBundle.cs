@@ -43,7 +43,9 @@ namespace Lucinda.Protocol.X3DH
         /// Using SortedDictionary ensures O(log n) operations and deterministic ordering.
         /// </summary>
         private readonly SortedDictionary<int, byte[]> _oneTimePreKeys =
-            oneTimePreKeys != null ? new SortedDictionary<int, byte[]>(oneTimePreKeys.ToDictionary(kvp => kvp.Key, kvp => (byte[])kvp.Value.Clone())) : [];
+            oneTimePreKeys != null
+                ? new SortedDictionary<int, byte[]>(oneTimePreKeys.ToDictionary(kvp => kvp.Key, kvp => (byte[])kvp.Value.Clone()))
+                : [];
 
         /// <summary>
         /// Gets the long-term identity public key (IK).
