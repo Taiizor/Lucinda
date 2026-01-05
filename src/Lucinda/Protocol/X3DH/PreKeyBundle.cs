@@ -96,13 +96,19 @@ namespace Lucinda.Protocol.X3DH
         }
 
         /// <summary>
-        /// Consumes (removes and returns) the first available one-time pre-key.
+        /// Consumes (removes and returns) the one-time pre-key with the smallest ID.
         /// This method is useful for server-side key distribution simulation.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// The key with the smallest ID is always selected to ensure deterministic behavior,
+        /// as dictionary enumeration order is not guaranteed by the .NET specification.
+        /// </para>
+        /// <para>
         /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
         /// this method concurrently, race conditions may occur. Use external synchronization
         /// (e.g., locking) when accessing from multiple threads.
+        /// </para>
         /// </remarks>
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
@@ -112,30 +118,31 @@ namespace Lucinda.Protocol.X3DH
                 return null;
             }
 
-            KeyValuePair<int, byte[]> first = _oneTimePreKeys.First();
+            // Use MinBy to ensure deterministic ordering (smallest key ID first)
+            KeyValuePair<int, byte[]> first = _oneTimePreKeys.MinBy(kvp => kvp.Key);
             _oneTimePreKeys.Remove(first.Key);
             return (first.Key, first.Value);
         }
 
         /// <summary>
-        /// Gets the first available one-time pre-key as a key-value pair, if any.
-        /// Used internally to ensure OneTimePreKeyId and OneTimePreKey are consistent.
+        /// Gets the one-time pre-key with the smallest ID as a key-value pair, if any.
+        /// Uses MinBy to ensure deterministic ordering regardless of dictionary enumeration order.
         /// </summary>
         private KeyValuePair<int, byte[]>? FirstOneTimePreKey =>
-            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.First() : null;
+            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.MinBy(kvp => kvp.Key) : null;
 
         /// <summary>
-        /// Gets the first available one-time pre-key ID, if any.
+        /// Gets the smallest available one-time pre-key ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
-        /// <value>The first one-time pre-key ID, or null if none available.</value>
+        /// <value>The smallest one-time pre-key ID, or null if none available.</value>
         public int? OneTimePreKeyId => FirstOneTimePreKey?.Key;
 
         /// <summary>
-        /// Gets the first available one-time pre-key, if any.
+        /// Gets the one-time pre-key with the smallest ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
-        /// <value>The first one-time pre-key bytes, or null if none available.</value>
+        /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
         public byte[]? OneTimePreKey => FirstOneTimePreKey?.Value;
     }
 
