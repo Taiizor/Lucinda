@@ -191,11 +191,11 @@ public sealed class PreKeyDistributionManagerTests
     }
 
     [Fact]
-    public void ConsumeKeyPair_ShouldBeThreadSafe()
+    public void ConsumeKeyPair_ShouldBeThreadSafe_AndReturnValidKeyData()
     {
         // Arrange
         PreKeyDistributionManager manager = CreateManager(Enumerable.Range(1, 100).ToArray());
-        ConcurrentBag<int> consumedIds = [];
+        ConcurrentBag<(int Id, byte[] PublicKey, byte[] PrivateKey)> consumedKeys = [];
 
         // Act
         Parallel.For(0, 100, _ =>
@@ -203,14 +203,23 @@ public sealed class PreKeyDistributionManagerTests
             (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
             if (consumed.HasValue)
             {
-                consumedIds.Add(consumed.Value.Id);
+                consumedKeys.Add(consumed.Value);
             }
         });
 
-        // Assert
-        consumedIds.Should().HaveCount(100);
-        consumedIds.Distinct().Should().HaveCount(100);
+        // Assert - All 100 unique keys should have been consumed with valid data
+        consumedKeys.Should().HaveCount(100);
+        consumedKeys.Select(k => k.Id).Distinct().Should().HaveCount(100);
         manager.RemainingKeyCount.Should().Be(0);
+
+        // Verify key data integrity - all keys should have valid lengths
+        foreach ((int Id, byte[] PublicKey, byte[] PrivateKey) key in consumedKeys)
+        {
+            key.PublicKey.Should().NotBeNullOrEmpty("public key should not be corrupted");
+            key.PrivateKey.Should().NotBeNullOrEmpty("private key should not be corrupted");
+            key.PublicKey.Length.Should().BeGreaterThan(0);
+            key.PrivateKey.Length.Should().BeGreaterThan(0);
+        }
     }
 
     [Fact]
@@ -246,7 +255,7 @@ public sealed class PreKeyDistributionManagerTests
     {
         // Arrange
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
-        int initialKeyCount = manager.Bundle.OneTimePreKeyCount;
+        int initialKeyCount = manager.Bundle.OneTimePreKeysCount;
 
         // Act
         (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
@@ -255,7 +264,7 @@ public sealed class PreKeyDistributionManagerTests
         consumed.Should().NotBeNull();
         manager.GetKeyPair(2).Should().BeNull("both keys should be removed");
         manager.Bundle.GetOneTimePreKey(2).Should().BeNull("public key should be removed");
-        manager.Bundle.OneTimePreKeyCount.Should().Be(initialKeyCount - 1);
+        manager.Bundle.OneTimePreKeysCount.Should().Be(initialKeyCount - 1);
     }
 
     [Fact]
@@ -292,8 +301,12 @@ public sealed class PreKeyDistributionManagerTests
         exhaustedFired.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that sequential consumption of the same key ID returns null on second attempt.
+    /// Thread-safety for concurrent access is tested separately in ConsumeKeyPairById_ShouldBeThreadSafe.
+    /// </summary>
     [Fact]
-    public void ConsumeKeyPairById_ShouldNotReturnSameKeyTwice()
+    public void ConsumeKeyPairById_Sequential_ShouldNotReturnSameKeyTwice()
     {
         // Arrange
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
@@ -308,11 +321,11 @@ public sealed class PreKeyDistributionManagerTests
     }
 
     [Fact]
-    public void ConsumeKeyPairById_ShouldBeThreadSafe()
+    public void ConsumeKeyPairById_ShouldBeThreadSafe_AndReturnValidKeyData()
     {
         // Arrange
         PreKeyDistributionManager manager = CreateManager(Enumerable.Range(1, 100).ToArray());
-        ConcurrentBag<int> successfulConsumptions = [];
+        ConcurrentBag<(int KeyId, byte[] PublicKey, byte[] PrivateKey)> successfulConsumptions = [];
         ConcurrentBag<int> failedConsumptions = [];
 
         // Act
@@ -322,7 +335,7 @@ public sealed class PreKeyDistributionManagerTests
             (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(keyId);
             if (consumed.HasValue)
             {
-                successfulConsumptions.Add(keyId);
+                successfulConsumptions.Add((keyId, consumed.Value.PublicKey, consumed.Value.PrivateKey));
             }
             else
             {
@@ -330,9 +343,16 @@ public sealed class PreKeyDistributionManagerTests
             }
         });
 
-        // Assert
+        // Assert - Each key should only be consumed once
         successfulConsumptions.Should().HaveCount(50);
-        successfulConsumptions.Distinct().Should().HaveCount(50);
+        successfulConsumptions.Select(k => k.KeyId).Distinct().Should().HaveCount(50);
         failedConsumptions.Should().HaveCount(50);
+
+        // Verify key data integrity
+        foreach ((int KeyId, byte[] PublicKey, byte[] PrivateKey) key in successfulConsumptions)
+        {
+            key.PublicKey.Should().NotBeNullOrEmpty("public key should not be corrupted");
+            key.PrivateKey.Should().NotBeNullOrEmpty("private key should not be corrupted");
+        }
     }
 }

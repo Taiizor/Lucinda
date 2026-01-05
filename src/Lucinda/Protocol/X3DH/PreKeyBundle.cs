@@ -116,7 +116,7 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// <para>
         /// <b>Performance Note:</b> This property creates a deep copy of all byte arrays on every access.
-        /// For performance-sensitive scenarios, use <see cref="OneTimePreKeyCount"/> for count,
+        /// For performance-sensitive scenarios, use <see cref="OneTimePreKeysCount"/> for count,
         /// <see cref="GetOneTimePreKey(int)"/> for individual keys, or cache the result.
         /// </para>
         /// <para>
@@ -174,7 +174,7 @@ namespace Lucinda.Protocol.X3DH
         /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
         /// </para>
         /// </remarks>
-        public int OneTimePreKeyCount => _oneTimePreKeys.Count;
+        public int OneTimePreKeysCount => _oneTimePreKeys.Count;
 
         /// <summary>
         /// Gets a specific one-time pre-key public key by ID.
@@ -214,7 +214,8 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// <para>
         /// The key with the smallest ID is always selected. Since a SortedDictionary is used internally,
-        /// the first element is guaranteed to have the smallest key, and the removal operation has O(log n) complexity.
+        /// the first element is guaranteed to have the smallest key. This implementation uses a single
+        /// enumerator pass for efficiency.
         /// </para>
         /// <para>
         /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
@@ -231,12 +232,14 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
         {
-            if (_oneTimePreKeys.Count == 0)
+            // Use enumerator for efficient single-pass access
+            using IEnumerator<KeyValuePair<int, byte[]>> enumerator = _oneTimePreKeys.GetEnumerator();
+            if (!enumerator.MoveNext())
             {
                 return null;
             }
 
-            KeyValuePair<int, byte[]> first = _oneTimePreKeys.First();
+            KeyValuePair<int, byte[]> first = enumerator.Current;
             _oneTimePreKeys.Remove(first.Key);
             return (first.Key, (byte[])first.Value.Clone());
         }

@@ -74,9 +74,9 @@ namespace Lucinda.Tests
             karenKey.Should().NotBeNull();
             consumedKeyIds.Add(karenKey!.Value.Id).Should().BeTrue("Karen's key ID should be unique");
 
-            // Assert - Alice and Karen got different keys (verified via HashSet)
+            // Assert - Alice and Karen got different keys (verified via HashSet and content comparison)
             consumedKeyIds.Should().HaveCount(2);
-            aliceKey.Value.Key.Should().NotEqual(karenKey.Value.Key);
+            aliceKey.Value.Key.Should().NotBeEquivalentTo(karenKey.Value.Key);
 
             // One key should still remain
             bobBundle.Bundle.OneTimePreKeys.Should().HaveCount(1);
@@ -141,7 +141,7 @@ namespace Lucinda.Tests
             nextKey.Should().NotBeNull();
             nextKeyId.Should().NotBeNull();
             nextKeyId.Should().NotBe(initialKeyId); // Different key now
-            nextKey.Should().NotEqual(initialKey);
+            nextKey.Should().NotBeEquivalentTo(initialKey); // Content comparison
 
             // Act - Consume all remaining keys
             bundle.ConsumeOneTimePreKey();
@@ -178,9 +178,9 @@ namespace Lucinda.Tests
             key30.Should().NotBeNull();
             keyMissing.Should().BeNull();
 
-            // All keys should be different
-            key10.Should().NotEqual(key20);
-            key20.Should().NotEqual(key30);
+            // All keys should have different content
+            key10.Should().NotBeEquivalentTo(key20);
+            key20.Should().NotBeEquivalentTo(key30);
         }
 
         [Fact]

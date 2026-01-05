@@ -19,6 +19,12 @@ namespace Lucinda.Protocol.X3DH
     /// Unlike the <see cref="PreKeyBundle.ConsumeOneTimePreKey"/> method which requires
     /// external synchronization, this manager handles all locking internally.
     /// </para>
+    /// <para>
+    /// <b>Note:</b> This class does not support key replenishment. Once keys are consumed,
+    /// they cannot be added back. The <see cref="KeysRunningLow"/> event fires only once
+    /// when the threshold is first crossed. To reset this behavior, create a new manager
+    /// instance with a fresh bundle.
+    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
@@ -58,8 +64,8 @@ namespace Lucinda.Protocol.X3DH
         /// </para>
         /// <para>
         /// This event fires only once when the count first drops to or below the threshold.
-        /// It will not fire again until the key count rises above the threshold and then
-        /// drops below it again (which would require adding new keys to the bundle).
+        /// It will not fire again for subsequent consumptions. To reset this behavior,
+        /// create a new manager instance with a fresh bundle containing replenished keys.
         /// </para>
         /// </remarks>
         public event Action<int>? KeysRunningLow;
@@ -79,7 +85,7 @@ namespace Lucinda.Protocol.X3DH
             {
                 lock (_lock)
                 {
-                    return _bundleWithPrivates.Bundle.OneTimePreKeyCount;
+                    return _bundleWithPrivates.Bundle.OneTimePreKeysCount;
                 }
             }
         }
@@ -157,13 +163,16 @@ namespace Lucinda.Protocol.X3DH
                 byte[]? privateKey = _bundleWithPrivates.ConsumeOneTimePreKeyPrivate(consumed.Value.Id);
                 if (privateKey is null)
                 {
-                    // This should not happen if the bundle is consistent
+                    // This indicates a programming error or data corruption - the public and private
+                    // key collections are out of sync. This should never happen under normal operation
+                    // when the bundle is created through proper APIs.
                     throw new InvalidOperationException(
-                        $"Private key not found for consumed public key ID {consumed.Value.Id}. Bundle state is inconsistent.");
+                        $"Bundle state inconsistency detected: Private key not found for public key ID {consumed.Value.Id}. " +
+                        "This may indicate data corruption or improper bundle manipulation.");
                 }
 
                 result = (consumed.Value.Id, consumed.Value.Key, privateKey);
-                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeyCount;
+                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeysCount;
                 wasLastKey = remainingCount == 0;
 
                 // Check if we should fire the low key event (only once when threshold is first crossed)
@@ -243,23 +252,25 @@ namespace Lucinda.Protocol.X3DH
 
             lock (_lock)
             {
+                // First, retrieve both keys before any mutations to ensure atomicity
                 byte[]? publicKey = _bundleWithPrivates.Bundle.GetOneTimePreKey(id);
                 if (publicKey is null)
                 {
                     return null;
                 }
 
-                byte[]? privateKey = _bundleWithPrivates.ConsumeOneTimePreKeyPrivate(id);
+                byte[]? privateKey = _bundleWithPrivates.GetOneTimePreKeyPrivate(id);
                 if (privateKey is null)
                 {
                     return null;
                 }
 
-                // Remove the public key from the bundle as well
+                // Now remove both keys atomically
                 _bundleWithPrivates.Bundle.RemoveOneTimePreKey(id);
+                _bundleWithPrivates.OneTimePreKeyPrivates.Remove(id);
 
                 result = (publicKey, privateKey);
-                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeyCount;
+                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeysCount;
                 wasLastKey = remainingCount == 0;
 
                 // Check if we should fire the low key event (only once when threshold is first crossed)
