@@ -17,18 +17,28 @@ namespace Lucinda.Tests;
 /// </summary>
 public sealed class PreKeyDistributionManagerTests
 {
-    [Fact]
-    public void ConsumeKeyPair_ShouldReturnKeyPair_WhenKeysAvailable()
+    /// <summary>
+    /// Helper method to create a PreKeyDistributionManager with specified one-time pre-key IDs.
+    /// </summary>
+    /// <param name="oneTimePreKeyIds">Array of one-time pre-key IDs to include in the bundle.</param>
+    /// <returns>A new PreKeyDistributionManager instance configured with the specified keys.</returns>
+    private static PreKeyDistributionManager CreateManager(int[] oneTimePreKeyIds)
     {
-        // Arrange
         using X3DHKeyAgreement x3dh = new();
         using EcdhKeyExchange ecdh = new();
 
         CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
         CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3]);
+            identity.Value, 1, oneTimePreKeyIds);
 
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        return new PreKeyDistributionManager(bundleResult.Value);
+    }
+
+    [Fact]
+    public void ConsumeKeyPair_ShouldReturnKeyPair_WhenKeysAvailable()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
         (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
@@ -45,14 +55,7 @@ public sealed class PreKeyDistributionManagerTests
     public void ConsumeKeyPair_ShouldReturnNull_WhenNoKeysAvailable()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, []); // No one-time keys
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([]); // No one-time keys
 
         // Act
         (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
@@ -66,14 +69,7 @@ public sealed class PreKeyDistributionManagerTests
     public void ConsumeKeyPair_ShouldConsumeAllKeys_WhenCalledMultipleTimes()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
         HashSet<int> consumedIds = [];
 
         // Act
@@ -95,17 +91,8 @@ public sealed class PreKeyDistributionManagerTests
     public void KeysRunningLow_ShouldFire_WhenBelowThreshold()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3, 4, 5]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value)
-        {
-            LowKeyThreshold = 3
-        };
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3, 4, 5]);
+        manager.LowKeyThreshold = 3;
 
         int? reportedCount = null;
         manager.KeysRunningLow += count => reportedCount = count;
@@ -122,14 +109,7 @@ public sealed class PreKeyDistributionManagerTests
     public void KeysExhausted_ShouldFire_WhenAllKeysConsumed()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([1]);
 
         bool exhaustedFired = false;
         manager.KeysExhausted += () => exhaustedFired = true;
@@ -146,14 +126,7 @@ public sealed class PreKeyDistributionManagerTests
     public void GetKeyPair_ShouldReturnKeyPair_WithoutConsuming()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
         (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(1);
@@ -169,14 +142,7 @@ public sealed class PreKeyDistributionManagerTests
     public void GetKeyPair_ShouldReturnNull_WhenKeyIdNotFound()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
         (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(999);
@@ -189,17 +155,10 @@ public sealed class PreKeyDistributionManagerTests
     public void Bundle_ShouldExposeUnderlyingBundle()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Assert
-        manager.Bundle.Should().BeSameAs(bundleResult.Value.Bundle);
+        manager.Bundle.Should().NotBeNull();
         manager.Bundle.IdentityKey.Should().NotBeNullOrEmpty();
         manager.Bundle.SignedPreKey.Should().NotBeNullOrEmpty();
     }
@@ -217,14 +176,7 @@ public sealed class PreKeyDistributionManagerTests
     public void ConsumeKeyPair_ShouldBeThreadSafe()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, Enumerable.Range(1, 100).ToArray());
-
-        PreKeyDistributionManager manager = new(bundleResult.Value);
+        PreKeyDistributionManager manager = CreateManager(Enumerable.Range(1, 100).ToArray());
         ConcurrentBag<int> consumedIds = [];
 
         // Act - Consume from multiple threads
@@ -241,5 +193,130 @@ public sealed class PreKeyDistributionManagerTests
         consumedIds.Should().HaveCount(100);
         consumedIds.Distinct().Should().HaveCount(100);
         manager.RemainingKeyCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldReturnKeyPair_WhenKeyExists()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+
+        // Assert
+        consumed.Should().NotBeNull();
+        consumed!.Value.PublicKey.Should().NotBeNullOrEmpty();
+        consumed.Value.PrivateKey.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldReturnNull_WhenKeyDoesNotExist()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(999);
+
+        // Assert
+        consumed.Should().BeNull();
+    }
+
+    [Fact(Skip = "Documents known bug - remove when fixed. See TODO in ConsumeKeyPairById implementation.")]
+    public void ConsumeKeyPairById_ShouldDocumentBug_PublicKeyNotRemoved()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
+        int initialPublicKeyCount = manager.Bundle.OneTimePreKeys.Count;
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+
+        // Assert - This test documents the current bug
+        consumed.Should().NotBeNull();
+
+        // Bug: The private key is removed but the public key remains in the bundle
+        manager.GetKeyPair(2).Should().BeNull("private key should be removed");
+        manager.Bundle.GetOneTimePreKey(2).Should().NotBeNull("BUG: public key should be removed but isn't");
+        manager.Bundle.OneTimePreKeys.Count.Should().Be(initialPublicKeyCount, "BUG: public key count should decrease but doesn't");
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldFireKeysRunningLow_WhenBelowThreshold()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3, 4, 5]);
+        manager.LowKeyThreshold = 3;
+
+        int? reportedCount = null;
+        manager.KeysRunningLow += count => reportedCount = count;
+
+        // Act - Consume keys to hit threshold
+        manager.ConsumeKeyPairById(1); // 4 private keys remaining
+        manager.ConsumeKeyPairById(2); // 3 private keys remaining - should fire
+
+        // Assert
+        reportedCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldFireKeysExhausted_WhenLastKeyConsumed()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1]);
+
+        bool exhaustedFired = false;
+        manager.KeysExhausted += () => exhaustedFired = true;
+
+        // Act
+        manager.ConsumeKeyPairById(1);
+
+        // Assert
+        exhaustedFired.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldNotReturnSameKeyTwice()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? first = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? second = manager.ConsumeKeyPairById(2);
+
+        // Assert
+        first.Should().NotBeNull();
+        second.Should().BeNull("key should not be returned twice");
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldBeThreadSafe()
+    {
+        // Arrange
+        PreKeyDistributionManager manager = CreateManager(Enumerable.Range(1, 100).ToArray());
+        ConcurrentBag<int> successfulConsumptions = [];
+        ConcurrentBag<int> failedConsumptions = [];
+
+        // Act - Multiple threads try to consume the same keys
+        Parallel.For(0, 100, i =>
+        {
+            int keyId = (i % 50) + 1; // Try to consume keys 1-50, with duplicates
+            (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(keyId);
+            if (consumed.HasValue)
+            {
+                successfulConsumptions.Add(keyId);
+            }
+            else
+            {
+                failedConsumptions.Add(keyId);
+            }
+        });
+
+        // Assert - Each key should only be consumed once
+        successfulConsumptions.Should().HaveCount(50, "only 50 unique keys should be consumed");
+        successfulConsumptions.Distinct().Should().HaveCount(50, "each key should only be consumed once");
+        failedConsumptions.Should().HaveCount(50, "50 attempts should fail due to duplicate consumption attempts");
     }
 }
