@@ -30,15 +30,13 @@ namespace Lucinda.Protocol.X3DH
     /// <param name="signedPreKey">The signed pre-key public key.</param>
     /// <param name="signedPreKeySignature">The signature over the signed pre-key.</param>
     /// <param name="signedPreKeyId">The identifier for the signed pre-key.</param>
-    /// <param name="oneTimePreKey">Optional one-time pre-key public key.</param>
-    /// <param name="oneTimePreKeyId">Optional identifier for the one-time pre-key.</param>
+    /// <param name="oneTimePreKeys">Dictionary of one-time pre-key public keys by ID.</param>
     public sealed class PreKeyBundle(
         byte[] identityKey,
         byte[] signedPreKey,
         byte[] signedPreKeySignature,
         int signedPreKeyId,
-        byte[]? oneTimePreKey = null,
-        int? oneTimePreKeyId = null)
+        Dictionary<int, byte[]>? oneTimePreKeys = null)
     {
         /// <summary>
         /// Gets the long-term identity public key (IK).
@@ -65,22 +63,56 @@ namespace Lucinda.Protocol.X3DH
         public int SignedPreKeyId { get; } = signedPreKeyId;
 
         /// <summary>
-        /// Gets the one-time pre-key public key (OPK), if available.
+        /// Gets the dictionary of one-time pre-key public keys (OPK), keyed by ID.
         /// </summary>
-        /// <value>The one-time pre-key public key bytes, or null if not available.</value>
-        public byte[]? OneTimePreKey { get; } = oneTimePreKey;
+        /// <value>The one-time pre-keys dictionary.</value>
+        public Dictionary<int, byte[]> OneTimePreKeys { get; } = oneTimePreKeys ?? [];
 
         /// <summary>
-        /// Gets the identifier for the one-time pre-key, if available.
+        /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
-        /// <value>The one-time pre-key ID, or null if not available.</value>
-        public int? OneTimePreKeyId { get; } = oneTimePreKeyId;
+        /// <value><c>true</c> if one or more one-time pre-keys are present; otherwise, <c>false</c>.</value>
+        public bool HasOneTimePreKey => OneTimePreKeys.Count > 0;
 
         /// <summary>
-        /// Gets a value indicating whether this bundle contains a one-time pre-key.
+        /// Gets a specific one-time pre-key public key by ID.
         /// </summary>
-        /// <value><c>true</c> if a one-time pre-key is present; otherwise, <c>false</c>.</value>
-        public bool HasOneTimePreKey => OneTimePreKey != null && OneTimePreKeyId.HasValue;
+        /// <param name="id">The one-time pre-key ID.</param>
+        /// <returns>The one-time pre-key public key bytes, or null if not found.</returns>
+        public byte[]? GetOneTimePreKey(int id)
+        {
+            return OneTimePreKeys.TryGetValue(id, out byte[]? key) ? key : null;
+        }
+
+        /// <summary>
+        /// Consumes (removes and returns) the first available one-time pre-key.
+        /// This method is useful for server-side key distribution simulation.
+        /// </summary>
+        /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
+        public (int Id, byte[] Key)? ConsumeOneTimePreKey()
+        {
+            var first = OneTimePreKeys.FirstOrDefault();
+            if (first.Value != null)
+            {
+                OneTimePreKeys.Remove(first.Key);
+                return (first.Key, first.Value);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the first available one-time pre-key ID, if any.
+        /// This property provides backward compatibility.
+        /// </summary>
+        /// <value>The first one-time pre-key ID, or null if none available.</value>
+        public int? OneTimePreKeyId => OneTimePreKeys.Count > 0 ? OneTimePreKeys.Keys.First() : null;
+
+        /// <summary>
+        /// Gets the first available one-time pre-key, if any.
+        /// This property provides backward compatibility.
+        /// </summary>
+        /// <value>The first one-time pre-key bytes, or null if none available.</value>
+        public byte[]? OneTimePreKey => OneTimePreKeys.Count > 0 ? OneTimePreKeys.Values.First() : null;
     }
 
     /// <summary>
