@@ -113,40 +113,25 @@ namespace Lucinda.Protocol.X3DH
         }
 
         /// <summary>
+        /// Gets the first available one-time pre-key as a key-value pair, if any.
+        /// Used internally to ensure OneTimePreKeyId and OneTimePreKey are consistent.
+        /// </summary>
+        private KeyValuePair<int, byte[]>? FirstOneTimePreKey =>
+            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.First() : null;
+
+        /// <summary>
         /// Gets the first available one-time pre-key ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The first one-time pre-key ID, or null if none available.</value>
-        public int? OneTimePreKeyId
-        {
-            get
-            {
-                if (_oneTimePreKeys.Count == 0)
-                {
-                    return null;
-                }
-
-                return _oneTimePreKeys.First().Key;
-            }
-        }
+        public int? OneTimePreKeyId => FirstOneTimePreKey?.Key;
 
         /// <summary>
         /// Gets the first available one-time pre-key, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The first one-time pre-key bytes, or null if none available.</value>
-        public byte[]? OneTimePreKey
-        {
-            get
-            {
-                if (_oneTimePreKeys.Count == 0)
-                {
-                    return null;
-                }
-
-                return _oneTimePreKeys.First().Value;
-            }
-        }
+        public byte[]? OneTimePreKey => FirstOneTimePreKey?.Value;
     }
 
     /// <summary>
