@@ -20,8 +20,6 @@ public sealed class PreKeyDistributionManagerTests
     /// <summary>
     /// Helper method to create a PreKeyDistributionManager with specified one-time pre-key IDs.
     /// </summary>
-    /// <param name="oneTimePreKeyIds">Array of one-time pre-key IDs to include in the bundle.</param>
-    /// <returns>A new PreKeyDistributionManager instance configured with the specified keys.</returns>
     private static PreKeyDistributionManager CreateManager(int[] oneTimePreKeyIds)
     {
         using X3DHKeyAgreement x3dh = new();
@@ -31,11 +29,6 @@ public sealed class PreKeyDistributionManagerTests
         CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
             identity.Value, 1, oneTimePreKeyIds);
 
-        // The PreKeyBundleWithPrivateKeys returned by GeneratePreKeyBundle is a fully materialized
-        // data object. PreKeyDistributionManager depends only on this bundle data and does not
-        // require the X3DHKeyAgreement or EcdhKeyExchange instances to remain alive. The using
-        // declarations above simply ensure these crypto primitives are disposed when the method
-        // scope ends, which is safe for the returned manager.
         return new PreKeyDistributionManager(bundleResult.Value);
     }
 
@@ -46,7 +39,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+        var consumed = manager.ConsumeKeyPair();
 
         // Assert
         consumed.Should().NotBeNull();
@@ -60,10 +53,10 @@ public sealed class PreKeyDistributionManagerTests
     public void ConsumeKeyPair_ShouldReturnNull_WhenNoKeysAvailable()
     {
         // Arrange
-        PreKeyDistributionManager manager = CreateManager([]); // No one-time keys
+        PreKeyDistributionManager manager = CreateManager([]);
 
         // Act
-        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+        var consumed = manager.ConsumeKeyPair();
 
         // Assert
         consumed.Should().BeNull();
@@ -80,7 +73,7 @@ public sealed class PreKeyDistributionManagerTests
         // Act
         for (int i = 0; i < 3; i++)
         {
-            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+            var consumed = manager.ConsumeKeyPair();
             consumed.Should().NotBeNull();
             consumedIds.Add(consumed!.Value.Id);
         }
@@ -102,7 +95,7 @@ public sealed class PreKeyDistributionManagerTests
         int? reportedCount = null;
         manager.KeysRunningLow += count => reportedCount = count;
 
-        // Act - Consume keys until we hit threshold
+        // Act
         manager.ConsumeKeyPair(); // 4 remaining
         manager.ConsumeKeyPair(); // 3 remaining - should fire
 
@@ -114,35 +107,20 @@ public sealed class PreKeyDistributionManagerTests
     public void KeysRunningLow_ShouldFireOnlyOnce_WhenBelowThreshold()
     {
         // Arrange
-        using X3DHKeyAgreement x3dh = new();
-        using EcdhKeyExchange ecdh = new();
-
-        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
-        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
-            identity.Value, 1, [1, 2, 3, 4, 5]);
-
-        PreKeyDistributionManager manager = new(bundleResult.Value)
-        {
-            LowKeyThreshold = 3
-        };
+        PreKeyDistributionManager manager = CreateManager([1, 2, 3, 4, 5]);
+        manager.LowKeyThreshold = 3;
 
         int eventFireCount = 0;
-        int? firstReportedCount = null;
-        manager.KeysRunningLow += count =>
-        {
-            eventFireCount++;
-            firstReportedCount ??= count;
-        };
+        manager.KeysRunningLow += _ => eventFireCount++;
 
-        // Act - Consume keys beyond threshold
+        // Act
         manager.ConsumeKeyPair(); // 4 remaining
-        manager.ConsumeKeyPair(); // 3 remaining - should fire (first time)
-        manager.ConsumeKeyPair(); // 2 remaining - should NOT fire again
-        manager.ConsumeKeyPair(); // 1 remaining - should NOT fire again
+        manager.ConsumeKeyPair(); // 3 remaining - should fire
+        manager.ConsumeKeyPair(); // 2 remaining - should NOT fire
+        manager.ConsumeKeyPair(); // 1 remaining - should NOT fire
 
         // Assert
-        eventFireCount.Should().Be(1, "event should fire only once");
-        firstReportedCount.Should().Be(3, "event should fire when count first hits threshold");
+        eventFireCount.Should().Be(1);
     }
 
     [Fact]
@@ -169,13 +147,13 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(1);
+        var keyPair = manager.GetKeyPair(1);
 
         // Assert
         keyPair.Should().NotBeNull();
         keyPair!.Value.PublicKey.Should().NotBeNullOrEmpty();
         keyPair.Value.PrivateKey.Should().NotBeNullOrEmpty();
-        manager.RemainingKeyCount.Should().Be(3); // Not consumed
+        manager.RemainingKeyCount.Should().Be(3);
     }
 
     [Fact]
@@ -185,7 +163,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(999);
+        var keyPair = manager.GetKeyPair(999);
 
         // Assert
         keyPair.Should().BeNull();
@@ -219,17 +197,17 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager(Enumerable.Range(1, 100).ToArray());
         ConcurrentBag<int> consumedIds = [];
 
-        // Act - Consume from multiple threads
+        // Act
         Parallel.For(0, 100, _ =>
         {
-            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+            var consumed = manager.ConsumeKeyPair();
             if (consumed.HasValue)
             {
                 consumedIds.Add(consumed.Value.Id);
             }
         });
 
-        // Assert - All 100 unique keys should have been consumed
+        // Assert
         consumedIds.Should().HaveCount(100);
         consumedIds.Distinct().Should().HaveCount(100);
         manager.RemainingKeyCount.Should().Be(0);
@@ -242,7 +220,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+        var consumed = manager.ConsumeKeyPairById(2);
 
         // Assert
         consumed.Should().NotBeNull();
@@ -257,29 +235,27 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(999);
+        var consumed = manager.ConsumeKeyPairById(999);
 
         // Assert
         consumed.Should().BeNull();
     }
 
-    [Fact(Skip = "Documents known bug - remove when fixed. See TODO in ConsumeKeyPairById implementation.")]
-    public void ConsumeKeyPairById_ShouldDocumentBug_PublicKeyNotRemoved()
+    [Fact]
+    public void ConsumeKeyPairById_ShouldRemoveBothPublicAndPrivateKeys()
     {
         // Arrange
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
-        int initialPublicKeyCount = manager.Bundle.OneTimePreKeys.Count;
+        int initialKeyCount = manager.Bundle.OneTimePreKeyCount;
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+        var consumed = manager.ConsumeKeyPairById(2);
 
-        // Assert - This test documents the current bug
+        // Assert
         consumed.Should().NotBeNull();
-
-        // Bug: The private key is removed but the public key remains in the bundle
-        manager.GetKeyPair(2).Should().BeNull("private key should be removed");
-        manager.Bundle.GetOneTimePreKey(2).Should().NotBeNull("BUG: public key should be removed but isn't");
-        manager.Bundle.OneTimePreKeys.Count.Should().Be(initialPublicKeyCount, "BUG: public key count should decrease but doesn't");
+        manager.GetKeyPair(2).Should().BeNull("both keys should be removed");
+        manager.Bundle.GetOneTimePreKey(2).Should().BeNull("public key should be removed");
+        manager.Bundle.OneTimePreKeyCount.Should().Be(initialKeyCount - 1);
     }
 
     [Fact]
@@ -292,9 +268,9 @@ public sealed class PreKeyDistributionManagerTests
         int? reportedCount = null;
         manager.KeysRunningLow += count => reportedCount = count;
 
-        // Act - Consume keys to hit threshold
-        manager.ConsumeKeyPairById(1); // 4 private keys remaining
-        manager.ConsumeKeyPairById(2); // 3 private keys remaining - should fire
+        // Act
+        manager.ConsumeKeyPairById(1); // 4 remaining
+        manager.ConsumeKeyPairById(2); // 3 remaining - should fire
 
         // Assert
         reportedCount.Should().Be(3);
@@ -323,8 +299,8 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        (byte[] PublicKey, byte[] PrivateKey)? first = manager.ConsumeKeyPairById(2);
-        (byte[] PublicKey, byte[] PrivateKey)? second = manager.ConsumeKeyPairById(2);
+        var first = manager.ConsumeKeyPairById(2);
+        var second = manager.ConsumeKeyPairById(2);
 
         // Assert
         first.Should().NotBeNull();
@@ -339,11 +315,11 @@ public sealed class PreKeyDistributionManagerTests
         ConcurrentBag<int> successfulConsumptions = [];
         ConcurrentBag<int> failedConsumptions = [];
 
-        // Act - Multiple threads try to consume the same keys
+        // Act
         Parallel.For(0, 100, i =>
         {
-            int keyId = (i % 50) + 1; // Try to consume keys 1-50, with duplicates
-            (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(keyId);
+            int keyId = (i % 50) + 1; // Try keys 1-50 with duplicates
+            var consumed = manager.ConsumeKeyPairById(keyId);
             if (consumed.HasValue)
             {
                 successfulConsumptions.Add(keyId);
@@ -354,9 +330,9 @@ public sealed class PreKeyDistributionManagerTests
             }
         });
 
-        // Assert - Each key should only be consumed once
-        successfulConsumptions.Should().HaveCount(50, "only 50 unique keys should be consumed");
-        successfulConsumptions.Distinct().Should().HaveCount(50, "each key should only be consumed once");
-        failedConsumptions.Should().HaveCount(50, "50 attempts should fail due to duplicate consumption attempts");
+        // Assert
+        successfulConsumptions.Should().HaveCount(50);
+        successfulConsumptions.Distinct().Should().HaveCount(50);
+        failedConsumptions.Should().HaveCount(50);
     }
 }
