@@ -1,0 +1,245 @@
+// <copyright file="PreKeyDistributionManagerTests.cs" company="Lucinda">
+// Copyright (c) Lucinda. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// </copyright>
+
+using FluentAssertions;
+using Lucinda.Abstractions;
+using Lucinda.KeyExchange;
+using Lucinda.Protocol.X3DH;
+using System.Collections.Concurrent;
+using Xunit;
+
+namespace Lucinda.Tests;
+
+/// <summary>
+/// Tests for the <see cref="PreKeyDistributionManager"/> class.
+/// </summary>
+public sealed class PreKeyDistributionManagerTests
+{
+    [Fact]
+    public void ConsumeKeyPair_ShouldReturnKeyPair_WhenKeysAvailable()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+
+        // Assert
+        consumed.Should().NotBeNull();
+        consumed!.Value.Id.Should().BeOneOf(1, 2, 3);
+        consumed.Value.PublicKey.Should().NotBeNullOrEmpty();
+        consumed.Value.PrivateKey.Should().NotBeNullOrEmpty();
+        manager.RemainingKeyCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void ConsumeKeyPair_ShouldReturnNull_WhenNoKeysAvailable()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, []); // No one-time keys
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+
+        // Assert
+        consumed.Should().BeNull();
+        manager.HasKeysAvailable.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ConsumeKeyPair_ShouldConsumeAllKeys_WhenCalledMultipleTimes()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+        HashSet<int> consumedIds = [];
+
+        // Act
+        for (int i = 0; i < 3; i++)
+        {
+            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+            consumed.Should().NotBeNull();
+            consumedIds.Add(consumed!.Value.Id);
+        }
+
+        // Assert
+        consumedIds.Should().BeEquivalentTo([1, 2, 3]);
+        manager.RemainingKeyCount.Should().Be(0);
+        manager.HasKeysAvailable.Should().BeFalse();
+        manager.ConsumeKeyPair().Should().BeNull();
+    }
+
+    [Fact]
+    public void KeysRunningLow_ShouldFire_WhenBelowThreshold()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3, 4, 5]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value)
+        {
+            LowKeyThreshold = 3
+        };
+
+        int? reportedCount = null;
+        manager.KeysRunningLow += count => reportedCount = count;
+
+        // Act - Consume keys until we hit threshold
+        manager.ConsumeKeyPair(); // 4 remaining
+        manager.ConsumeKeyPair(); // 3 remaining - should fire
+
+        // Assert
+        reportedCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void KeysExhausted_ShouldFire_WhenAllKeysConsumed()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        bool exhaustedFired = false;
+        manager.KeysExhausted += () => exhaustedFired = true;
+
+        // Act
+        manager.ConsumeKeyPair();
+
+        // Assert
+        exhaustedFired.Should().BeTrue();
+        manager.RemainingKeyCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void GetKeyPair_ShouldReturnKeyPair_WithoutConsuming()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(1);
+
+        // Assert
+        keyPair.Should().NotBeNull();
+        keyPair!.Value.PublicKey.Should().NotBeNullOrEmpty();
+        keyPair.Value.PrivateKey.Should().NotBeNullOrEmpty();
+        manager.RemainingKeyCount.Should().Be(3); // Not consumed
+    }
+
+    [Fact]
+    public void GetKeyPair_ShouldReturnNull_WhenKeyIdNotFound()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(999);
+
+        // Assert
+        keyPair.Should().BeNull();
+    }
+
+    [Fact]
+    public void Bundle_ShouldExposeUnderlyingBundle()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Assert
+        manager.Bundle.Should().BeSameAs(bundleResult.Value.Bundle);
+        manager.Bundle.IdentityKey.Should().NotBeNullOrEmpty();
+        manager.Bundle.SignedPreKey.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenBundleIsNull()
+    {
+        // Act & Assert
+        FluentActions.Invoking(() => new PreKeyDistributionManager(null!))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("bundleWithPrivates");
+    }
+
+    [Fact]
+    public void ConsumeKeyPair_ShouldBeThreadSafe()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, Enumerable.Range(1, 100).ToArray());
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+        ConcurrentBag<int> consumedIds = [];
+
+        // Act - Consume from multiple threads
+        Parallel.For(0, 100, _ =>
+        {
+            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
+            if (consumed.HasValue)
+            {
+                consumedIds.Add(consumed.Value.Id);
+            }
+        });
+
+        // Assert - All 100 unique keys should have been consumed
+        consumedIds.Should().HaveCount(100);
+        consumedIds.Distinct().Should().HaveCount(100);
+        manager.RemainingKeyCount.Should().Be(0);
+    }
+}
