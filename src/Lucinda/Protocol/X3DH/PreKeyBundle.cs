@@ -198,15 +198,28 @@ namespace Lucinda.Protocol.X3DH
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The smallest one-time pre-key ID, or null if none available.</value>
-        public int? OneTimePreKeyId => _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Keys.First() : null;
+        public int? OneTimePreKeyId
+        {
+            get
+            {
+                using IEnumerator<int> enumerator = _oneTimePreKeys.Keys.GetEnumerator();
+                return enumerator.MoveNext() ? enumerator.Current : null;
+            }
+        }
 
         /// <summary>
         /// Gets the one-time pre-key with the smallest ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
-        public byte[]? OneTimePreKey =>
-            (byte[]?)(_oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First().Clone() : null);
+        public byte[]? OneTimePreKey
+        {
+            get
+            {
+                using IEnumerator<byte[]> enumerator = _oneTimePreKeys.Values.GetEnumerator();
+                return enumerator.MoveNext() ? (byte[])enumerator.Current.Clone() : null;
+            }
+        }
     }
 
     /// <summary>
