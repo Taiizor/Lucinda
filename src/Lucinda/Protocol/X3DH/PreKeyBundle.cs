@@ -36,13 +36,14 @@ namespace Lucinda.Protocol.X3DH
         byte[] signedPreKey,
         byte[] signedPreKeySignature,
         int signedPreKeyId,
-        Dictionary<int, byte[]>? oneTimePreKeys = null)
+        IDictionary<int, byte[]>? oneTimePreKeys = null)
     {
         /// <summary>
-        /// Gets the dictionary of one-time pre-key public keys (OPK), keyed by ID.
+        /// Internal sorted dictionary for one-time pre-keys.
+        /// Using SortedDictionary ensures O(log n) operations and deterministic ordering.
         /// </summary>
-        /// <value>The one-time pre-keys dictionary.</value>
-        private readonly Dictionary<int, byte[]> _oneTimePreKeys = oneTimePreKeys ?? [];
+        private readonly SortedDictionary<int, byte[]> _oneTimePreKeys =
+            oneTimePreKeys != null ? new SortedDictionary<int, byte[]>(oneTimePreKeys) : [];
 
         /// <summary>
         /// Gets the long-term identity public key (IK).
@@ -70,6 +71,7 @@ namespace Lucinda.Protocol.X3DH
 
         /// <summary>
         /// Gets a read-only view of the one-time pre-key public keys (OPK), keyed by ID.
+        /// Keys are sorted by ID in ascending order.
         /// </summary>
         /// <value>The one-time pre-keys as a read-only dictionary.</value>
         public IReadOnlyDictionary<int, byte[]> OneTimePreKeys => _oneTimePreKeys;
@@ -101,8 +103,8 @@ namespace Lucinda.Protocol.X3DH
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The key with the smallest ID is always selected to ensure deterministic behavior,
-        /// as dictionary enumeration order is not guaranteed by the .NET specification.
+        /// The key with the smallest ID is always selected. Since a SortedDictionary is used internally,
+        /// the first element is guaranteed to have the smallest key, providing O(log n) complexity.
         /// </para>
         /// <para>
         /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
@@ -113,37 +115,31 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
         {
-            if (_oneTimePreKeys.Count == 0)
+            // SortedDictionary.Keys is already sorted, First() returns smallest key
+            using IEnumerator<KeyValuePair<int, byte[]>> enumerator = _oneTimePreKeys.GetEnumerator();
+            if (!enumerator.MoveNext())
             {
                 return null;
             }
 
-            // Use MinBy to ensure deterministic ordering (smallest key ID first)
-            KeyValuePair<int, byte[]> first = _oneTimePreKeys.MinBy(kvp => kvp.Key);
+            KeyValuePair<int, byte[]> first = enumerator.Current;
             _oneTimePreKeys.Remove(first.Key);
             return (first.Key, first.Value);
         }
-
-        /// <summary>
-        /// Gets the one-time pre-key with the smallest ID as a key-value pair, if any.
-        /// Uses MinBy to ensure deterministic ordering regardless of dictionary enumeration order.
-        /// </summary>
-        private KeyValuePair<int, byte[]>? FirstOneTimePreKey =>
-            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.MinBy(kvp => kvp.Key) : null;
 
         /// <summary>
         /// Gets the smallest available one-time pre-key ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The smallest one-time pre-key ID, or null if none available.</value>
-        public int? OneTimePreKeyId => FirstOneTimePreKey?.Key;
+        public int? OneTimePreKeyId => _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Keys.First() : null;
 
         /// <summary>
         /// Gets the one-time pre-key with the smallest ID, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
-        public byte[]? OneTimePreKey => FirstOneTimePreKey?.Value;
+        public byte[]? OneTimePreKey => _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First() : null;
     }
 
     /// <summary>
