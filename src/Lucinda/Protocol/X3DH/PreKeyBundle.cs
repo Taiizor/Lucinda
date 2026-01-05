@@ -173,7 +173,7 @@ namespace Lucinda.Protocol.X3DH
         /// </summary>
         /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
         public byte[]? OneTimePreKey =>
-            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First().ToArray() : null;
+            (byte[]?)(_oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First().Clone() : null);
     }
 
     /// <summary>
