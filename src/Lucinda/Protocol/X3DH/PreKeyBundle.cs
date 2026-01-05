@@ -82,12 +82,31 @@ namespace Lucinda.Protocol.X3DH
         /// For defensive copies, use <see cref="GetOneTimePreKey(int)"/> instead.
         /// <para>
         /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
-        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
-        /// around all accesses to one-time pre-keys, including this property and the returned dictionary.
-        /// </para>
+        /// The returned dictionary contains clones of the internal byte arrays, so modifications
+        /// to the returned values do not affect the internal state.
+        /// For convenience and efficiency when only a single pre-key is needed, use
+        /// <see cref="GetOneTimePreKey(int)"/> instead.
         /// </remarks>
-        public IReadOnlyDictionary<int, byte[]> OneTimePreKeys => _oneTimePreKeys;
+        public IReadOnlyDictionary<int, byte[]> OneTimePreKeys
+        {
+            get
+            {
+                if (_oneTimePreKeys.Count == 0)
+                {
+                    return new Dictionary<int, byte[]>(0);
+                }
 
+                var copy = new Dictionary<int, byte[]>(_oneTimePreKeys.Count);
+                foreach (var kvp in _oneTimePreKeys)
+                {
+                    var valueCopy = new byte[kvp.Value.Length];
+                    System.Array.Copy(kvp.Value, valueCopy, kvp.Value.Length);
+                    copy.Add(kvp.Key, valueCopy);
+                }
+
+                return copy;
+            }
+        }
         /// <summary>
         /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
