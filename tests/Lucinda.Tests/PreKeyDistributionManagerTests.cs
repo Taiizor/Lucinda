@@ -31,6 +31,11 @@ public sealed class PreKeyDistributionManagerTests
         CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
             identity.Value, 1, oneTimePreKeyIds);
 
+        // The PreKeyBundleWithPrivateKeys returned by GeneratePreKeyBundle is a fully materialized
+        // data object. PreKeyDistributionManager depends only on this bundle data and does not
+        // require the X3DHKeyAgreement or EcdhKeyExchange instances to remain alive. The using
+        // declarations above simply ensure these crypto primitives are disposed when the method
+        // scope ends, which is safe for the returned manager.
         return new PreKeyDistributionManager(bundleResult.Value);
     }
 
