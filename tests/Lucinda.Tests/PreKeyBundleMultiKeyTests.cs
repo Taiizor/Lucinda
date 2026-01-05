@@ -120,15 +120,37 @@ namespace Lucinda.Tests
             CryptoResult<PreKeyBundleWithPrivateKeys> result = x3dh.GeneratePreKeyBundle(
                 identityKeyPair.Value, 1, [1, 2, 3]);
 
-            // Act - Use backward-compatible single key properties
             PreKeyBundle bundle = result.Value.Bundle;
-            byte[]? singleKey = bundle.OneTimePreKey;
-            int? singleKeyId = bundle.OneTimePreKeyId;
 
-            // Assert - Should return the first available key
-            singleKey.Should().NotBeNull();
-            singleKeyId.Should().NotBeNull();
+            // Act & Assert - Initial state: backward-compat properties should work
+            byte[]? initialKey = bundle.OneTimePreKey;
+            int? initialKeyId = bundle.OneTimePreKeyId;
+            initialKey.Should().NotBeNull();
+            initialKeyId.Should().NotBeNull();
             bundle.HasOneTimePreKey.Should().BeTrue();
+
+            // Act - Consume the first key
+            (int Id, byte[] Key)? consumed = bundle.ConsumeOneTimePreKey();
+            consumed.Should().NotBeNull();
+            consumed!.Value.Id.Should().Be(initialKeyId!.Value);
+            consumed.Value.Key.Should().Equal(initialKey);
+
+            // Assert - After consumption: backward-compat properties should return NEXT key
+            byte[]? nextKey = bundle.OneTimePreKey;
+            int? nextKeyId = bundle.OneTimePreKeyId;
+            nextKey.Should().NotBeNull();
+            nextKeyId.Should().NotBeNull();
+            nextKeyId.Should().NotBe(initialKeyId); // Different key now
+            nextKey.Should().NotEqual(initialKey);
+
+            // Act - Consume all remaining keys
+            bundle.ConsumeOneTimePreKey();
+            bundle.ConsumeOneTimePreKey();
+
+            // Assert - After all consumed: backward-compat properties should return null
+            bundle.OneTimePreKey.Should().BeNull();
+            bundle.OneTimePreKeyId.Should().BeNull();
+            bundle.HasOneTimePreKey.Should().BeFalse();
         }
 
         [Fact]
