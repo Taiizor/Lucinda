@@ -104,8 +104,21 @@ namespace Lucinda.Protocol.X3DH
         /// </summary>
         /// <value>The public pre-key bundle (identity key, signed pre-key, etc.).</value>
         /// <remarks>
-        /// This provides access to the non-consumable parts of the bundle.
-        /// For one-time pre-key access, use <see cref="ConsumeKeyPair"/> instead.
+        /// <para>
+        /// This provides access only to the non-consumable parts of the bundle (identity key,
+        /// signed pre-key, etc.). For one-time pre-key access, always use
+        /// <see cref="ConsumeKeyPair"/> instead of calling
+        /// <see cref="PreKeyBundle.ConsumeOneTimePreKey"/> or manipulating
+        /// <see cref="PreKeyBundle.OneTimePreKeys"/> directly.
+        /// </para>
+        /// <para>
+        /// The underlying <see cref="PreKeyBundle"/> type is not thread-safe for consuming
+        /// one-time pre-keys. Invoking its mutating members (such as consuming or modifying
+        /// one-time pre-keys) from multiple threads can bypass the synchronization provided by
+        /// <see cref="PreKeyDistributionManager"/> and lead to race conditions or duplicate
+        /// key consumption. If you must use such members, you are responsible for providing
+        /// appropriate external synchronization.
+        /// </para>
         /// </remarks>
         public PreKeyBundle Bundle => _bundleWithPrivates.Bundle;
 
