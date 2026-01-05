@@ -78,6 +78,7 @@ namespace Lucinda.Protocol.X3DH
 
             return validated;
         }
+
         /// <summary>
         /// Gets the long-term identity public key (IK).
         /// </summary>
@@ -109,16 +110,17 @@ namespace Lucinda.Protocol.X3DH
         /// <value>The one-time pre-keys as a read-only dictionary.</value>
         /// <remarks>
         /// <para>
+        /// <b>Performance Note:</b> This property creates a deep copy of all byte arrays on every access.
+        /// For performance-sensitive scenarios, cache the result or use <see cref="GetOneTimePreKey(int)"/>
+        /// to retrieve individual keys.
+        /// </para>
+        /// <para>
         /// The returned dictionary contains clones of the internal byte arrays, so modifications
         /// to the returned values do not affect the internal state.
         /// </para>
         /// <para>
         /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
         /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
-        /// </para>
-        /// <para>
-        /// For convenience and efficiency when only a single pre-key is needed, use
-        /// <see cref="GetOneTimePreKey(int)"/> instead.
         /// </para>
         /// </remarks>
         public IReadOnlyDictionary<int, byte[]> OneTimePreKeys
