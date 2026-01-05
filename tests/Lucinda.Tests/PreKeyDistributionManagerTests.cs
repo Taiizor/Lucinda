@@ -39,7 +39,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var consumed = manager.ConsumeKeyPair();
+        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
 
         // Assert
         consumed.Should().NotBeNull();
@@ -56,7 +56,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([]);
 
         // Act
-        var consumed = manager.ConsumeKeyPair();
+        (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
 
         // Assert
         consumed.Should().BeNull();
@@ -73,7 +73,7 @@ public sealed class PreKeyDistributionManagerTests
         // Act
         for (int i = 0; i < 3; i++)
         {
-            var consumed = manager.ConsumeKeyPair();
+            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
             consumed.Should().NotBeNull();
             consumedIds.Add(consumed!.Value.Id);
         }
@@ -147,7 +147,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var keyPair = manager.GetKeyPair(1);
+        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(1);
 
         // Assert
         keyPair.Should().NotBeNull();
@@ -163,7 +163,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var keyPair = manager.GetKeyPair(999);
+        (byte[] PublicKey, byte[] PrivateKey)? keyPair = manager.GetKeyPair(999);
 
         // Assert
         keyPair.Should().BeNull();
@@ -200,7 +200,7 @@ public sealed class PreKeyDistributionManagerTests
         // Act
         Parallel.For(0, 100, _ =>
         {
-            var consumed = manager.ConsumeKeyPair();
+            (int Id, byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPair();
             if (consumed.HasValue)
             {
                 consumedIds.Add(consumed.Value.Id);
@@ -220,7 +220,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var consumed = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
 
         // Assert
         consumed.Should().NotBeNull();
@@ -235,7 +235,7 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var consumed = manager.ConsumeKeyPairById(999);
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(999);
 
         // Assert
         consumed.Should().BeNull();
@@ -249,7 +249,7 @@ public sealed class PreKeyDistributionManagerTests
         int initialKeyCount = manager.Bundle.OneTimePreKeyCount;
 
         // Act
-        var consumed = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
 
         // Assert
         consumed.Should().NotBeNull();
@@ -299,8 +299,8 @@ public sealed class PreKeyDistributionManagerTests
         PreKeyDistributionManager manager = CreateManager([1, 2, 3]);
 
         // Act
-        var first = manager.ConsumeKeyPairById(2);
-        var second = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? first = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? second = manager.ConsumeKeyPairById(2);
 
         // Assert
         first.Should().NotBeNull();
@@ -319,7 +319,7 @@ public sealed class PreKeyDistributionManagerTests
         Parallel.For(0, 100, i =>
         {
             int keyId = (i % 50) + 1; // Try keys 1-50 with duplicates
-            var consumed = manager.ConsumeKeyPairById(keyId);
+            (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(keyId);
             if (consumed.HasValue)
             {
                 successfulConsumptions.Add(keyId);
