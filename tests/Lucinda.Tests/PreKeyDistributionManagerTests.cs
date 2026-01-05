@@ -119,6 +119,41 @@ public sealed class PreKeyDistributionManagerTests
     }
 
     [Fact]
+    public void KeysRunningLow_ShouldFireOnlyOnce_WhenBelowThreshold()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3, 4, 5]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value)
+        {
+            LowKeyThreshold = 3
+        };
+
+        int eventFireCount = 0;
+        int? firstReportedCount = null;
+        manager.KeysRunningLow += count =>
+        {
+            eventFireCount++;
+            firstReportedCount ??= count;
+        };
+
+        // Act - Consume keys beyond threshold
+        manager.ConsumeKeyPair(); // 4 remaining
+        manager.ConsumeKeyPair(); // 3 remaining - should fire (first time)
+        manager.ConsumeKeyPair(); // 2 remaining - should NOT fire again
+        manager.ConsumeKeyPair(); // 1 remaining - should NOT fire again
+
+        // Assert
+        eventFireCount.Should().Be(1, "event should fire only once");
+        firstReportedCount.Should().Be(3, "event should fire when count first hits threshold");
+    }
+
+    [Fact]
     public void KeysExhausted_ShouldFire_WhenAllKeysConsumed()
     {
         // Arrange
