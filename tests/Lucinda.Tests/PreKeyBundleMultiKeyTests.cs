@@ -53,12 +53,8 @@ namespace Lucinda.Tests
         {
             // Arrange - Bob generates bundle with multiple one-time keys
             using X3DHKeyAgreement x3dh = new();
-            using EcdhKeyExchange aliceEcdh = new();
-            using EcdhKeyExchange karenEcdh = new();
             using EcdhKeyExchange bobEcdh = new();
 
-            CryptoResult<AsymmetricKeyPair> aliceIdentity = aliceEcdh.GenerateKeyPair();
-            CryptoResult<AsymmetricKeyPair> karenIdentity = karenEcdh.GenerateKeyPair();
             CryptoResult<AsymmetricKeyPair> bobIdentity = bobEcdh.GenerateKeyPair();
 
             CryptoResult<PreKeyBundleWithPrivateKeys> bobBundleResult = x3dh.GeneratePreKeyBundle(
