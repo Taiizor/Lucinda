@@ -179,6 +179,12 @@ namespace Lucinda.Protocol.X3DH
         /// this method concurrently, race conditions may occur. Use external synchronization
         /// (e.g., locking) when accessing from multiple threads.
         /// </para>
+        /// <para>
+        /// <b>Design Note:</b> This method is provided for convenience in testing and
+        /// single-threaded scenarios. In production server implementations, key consumption
+        /// and distribution should be managed by a dedicated service with appropriate
+        /// concurrency controls (e.g., database-level locking, distributed locks).
+        /// </para>
         /// </remarks>
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
