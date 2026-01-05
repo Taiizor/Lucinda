@@ -204,6 +204,11 @@ namespace Lucinda.Protocol.X3DH
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The smallest one-time pre-key ID, or null if none available.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
         public int? OneTimePreKeyId
         {
             get
@@ -218,6 +223,11 @@ namespace Lucinda.Protocol.X3DH
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
         public byte[]? OneTimePreKey
         {
             get
