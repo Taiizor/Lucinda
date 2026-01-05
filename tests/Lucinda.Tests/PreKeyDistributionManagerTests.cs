@@ -286,7 +286,7 @@ public sealed class PreKeyDistributionManagerTests
     }
 
     [Fact]
-    public void ConsumeKeyPairById_ShouldRemovePrivateKey_ButNotPublicKey()
+    public void ConsumeKeyPairById_ShouldDocumentBug_PublicKeyNotRemoved()
     {
         // Arrange
         using X3DHKeyAgreement x3dh = new();
