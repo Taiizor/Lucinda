@@ -94,7 +94,7 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>The one-time pre-key public key bytes, or null if not found.</returns>
         public byte[]? GetOneTimePreKey(int id)
         {
-            return _oneTimePreKeys.TryGetValue(id, out byte[]? key) ? key : null;
+            return _oneTimePreKeys.TryGetValue(id, out byte[]? key) ? (byte[])key.Clone() : null;
         }
 
         /// <summary>
