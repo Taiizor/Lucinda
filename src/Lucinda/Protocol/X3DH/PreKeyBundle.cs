@@ -104,7 +104,7 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// <para>
         /// The key with the smallest ID is always selected. Since a SortedDictionary is used internally,
-        /// the first element is guaranteed to have the smallest key, providing O(log n) complexity.
+        /// the first element is guaranteed to have the smallest key, and the removal operation has O(log n) complexity.
         /// </para>
         /// <para>
         /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
