@@ -61,16 +61,21 @@ namespace Lucinda.Tests
                 bobIdentity.Value, 1, [1, 2, 3]);
             PreKeyBundleWithPrivateKeys bobBundle = bobBundleResult.Value;
 
+            // Track consumed key IDs to verify uniqueness
+            HashSet<int> consumedKeyIds = [];
+
             // Simulate server giving Alice one key
             (int Id, byte[] Key)? aliceKey = bobBundle.Bundle.ConsumeOneTimePreKey();
             aliceKey.Should().NotBeNull();
+            consumedKeyIds.Add(aliceKey!.Value.Id).Should().BeTrue("Alice's key ID should be unique");
 
             // Simulate server giving Karen a different key
             (int Id, byte[] Key)? karenKey = bobBundle.Bundle.ConsumeOneTimePreKey();
             karenKey.Should().NotBeNull();
+            consumedKeyIds.Add(karenKey!.Value.Id).Should().BeTrue("Karen's key ID should be unique");
 
-            // Assert - Alice and Karen got different keys
-            aliceKey!.Value.Id.Should().NotBe(karenKey!.Value.Id);
+            // Assert - Alice and Karen got different keys (verified via HashSet)
+            consumedKeyIds.Should().HaveCount(2);
             aliceKey.Value.Key.Should().NotEqual(karenKey.Value.Key);
 
             // One key should still remain
