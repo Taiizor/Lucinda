@@ -42,19 +42,18 @@ namespace Lucinda.Protocol.X3DH
         /// Internal sorted dictionary for one-time pre-keys.
         /// Using SortedDictionary ensures O(log n) operations and deterministic ordering.
         /// </summary>
-        private readonly SortedDictionary<int, byte[]> _oneTimePreKeys =
-            ValidateOneTimePreKeys(oneTimePreKeys);
+        private readonly SortedDictionary<int, byte[]> _oneTimePreKeys = ValidateOneTimePreKeys(oneTimePreKeys);
 
         private static SortedDictionary<int, byte[]> ValidateOneTimePreKeys(IDictionary<int, byte[]>? oneTimePreKeys)
         {
             if (oneTimePreKeys is null || oneTimePreKeys.Count == 0)
             {
-                return new SortedDictionary<int, byte[]>();
+                return [];
             }
 
-            var validated = new SortedDictionary<int, byte[]>();
+            SortedDictionary<int, byte[]> validated = [];
 
-            foreach (var kvp in oneTimePreKeys)
+            foreach (KeyValuePair<int, byte[]> kvp in oneTimePreKeys)
             {
                 if (kvp.Key <= 0)
                 {
@@ -63,7 +62,7 @@ namespace Lucinda.Protocol.X3DH
                         $"One-time pre-key ID must be a positive integer. Invalid ID: {kvp.Key}.");
                 }
 
-                var value = kvp.Value ?? throw new ArgumentException(
+                byte[] value = kvp.Value ?? throw new ArgumentException(
                     "One-time pre-key value cannot be null.",
                     nameof(oneTimePreKeys));
 
