@@ -139,7 +139,8 @@ namespace Lucinda.Protocol.X3DH
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
-        public byte[]? OneTimePreKey => _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First() : null;
+        public byte[]? OneTimePreKey =>
+            _oneTimePreKeys.Count > 0 ? _oneTimePreKeys.Values.First().ToArray() : null;
     }
 
     /// <summary>
