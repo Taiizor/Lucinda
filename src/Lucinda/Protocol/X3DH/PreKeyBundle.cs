@@ -80,6 +80,11 @@ namespace Lucinda.Protocol.X3DH
         /// <b>Security Warning:</b> The returned dictionary contains references to
         /// the internal byte arrays. Callers must not modify the returned byte array contents.
         /// For defensive copies, use <see cref="GetOneTimePreKey(int)"/> instead.
+        /// <para>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property and the returned dictionary.
+        /// </para>
         /// </remarks>
         public IReadOnlyDictionary<int, byte[]> OneTimePreKeys => _oneTimePreKeys;
 
