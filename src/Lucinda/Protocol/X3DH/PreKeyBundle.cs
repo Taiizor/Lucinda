@@ -76,6 +76,11 @@ namespace Lucinda.Protocol.X3DH
         /// Keys are sorted by ID in ascending order.
         /// </summary>
         /// <value>The one-time pre-keys as a read-only dictionary.</value>
+        /// <remarks>
+        /// <b>Security Warning:</b> The returned dictionary contains references to
+        /// the internal byte arrays. Callers must not modify the returned byte array contents.
+        /// For defensive copies, use <see cref="GetOneTimePreKey(int)"/> instead.
+        /// </remarks>
         public IReadOnlyDictionary<int, byte[]> OneTimePreKeys => _oneTimePreKeys;
 
         /// <summary>
