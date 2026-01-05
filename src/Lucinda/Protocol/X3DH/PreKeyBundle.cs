@@ -77,15 +77,18 @@ namespace Lucinda.Protocol.X3DH
         /// </summary>
         /// <value>The one-time pre-keys as a read-only dictionary.</value>
         /// <remarks>
-        /// <b>Security Warning:</b> The returned dictionary contains references to
-        /// the internal byte arrays. Callers must not modify the returned byte array contents.
-        /// For defensive copies, use <see cref="GetOneTimePreKey(int)"/> instead.
         /// <para>
-        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
         /// The returned dictionary contains clones of the internal byte arrays, so modifications
         /// to the returned values do not affect the internal state.
+        /// </para>
+        /// <para>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
+        /// </para>
+        /// <para>
         /// For convenience and efficiency when only a single pre-key is needed, use
         /// <see cref="GetOneTimePreKey(int)"/> instead.
+        /// </para>
         /// </remarks>
         public IReadOnlyDictionary<int, byte[]> OneTimePreKeys
         {
@@ -96,17 +99,18 @@ namespace Lucinda.Protocol.X3DH
                     return new Dictionary<int, byte[]>(0);
                 }
 
-                var copy = new Dictionary<int, byte[]>(_oneTimePreKeys.Count);
-                foreach (var kvp in _oneTimePreKeys)
+                Dictionary<int, byte[]> copy = new(_oneTimePreKeys.Count);
+                foreach (KeyValuePair<int, byte[]> kvp in _oneTimePreKeys)
                 {
-                    var valueCopy = new byte[kvp.Value.Length];
-                    System.Array.Copy(kvp.Value, valueCopy, kvp.Value.Length);
+                    byte[] valueCopy = new byte[kvp.Value.Length];
+                    Array.Copy(kvp.Value, valueCopy, kvp.Value.Length);
                     copy.Add(kvp.Key, valueCopy);
                 }
 
                 return copy;
             }
         }
+
         /// <summary>
         /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
