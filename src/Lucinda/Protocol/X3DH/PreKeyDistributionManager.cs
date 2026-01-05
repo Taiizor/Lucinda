@@ -34,9 +34,6 @@ namespace Lucinda.Protocol.X3DH
     /// }
     /// </code>
     /// </example>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="PreKeyDistributionManager"/> class.
-    /// </remarks>
     /// <param name="bundleWithPrivates">The pre-key bundle with private keys to manage.</param>
     /// <exception cref="ArgumentNullException">Thrown when bundleWithPrivates is null.</exception>
     public sealed class PreKeyDistributionManager(PreKeyBundleWithPrivateKeys bundleWithPrivates)
