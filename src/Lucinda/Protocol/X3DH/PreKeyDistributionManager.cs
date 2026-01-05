@@ -79,7 +79,7 @@ namespace Lucinda.Protocol.X3DH
             {
                 lock (_lock)
                 {
-                    return _bundleWithPrivates.Bundle.OneTimePreKeys.Count;
+                    return _bundleWithPrivates.Bundle.OneTimePreKeyCount;
                 }
             }
         }
@@ -163,7 +163,7 @@ namespace Lucinda.Protocol.X3DH
                 }
 
                 result = (consumed.Value.Id, consumed.Value.Key, privateKey);
-                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeys.Count;
+                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeyCount;
                 wasLastKey = remainingCount == 0;
 
                 // Check if we should fire the low key event (only once when threshold is first crossed)
@@ -255,15 +255,11 @@ namespace Lucinda.Protocol.X3DH
                     return null;
                 }
 
-                // TODO: Bug - We need to remove the public key from the bundle too
-                // Since PreKeyBundle doesn't have a RemoveOneTimePreKey method,
-                // we consume by ID using the internal dictionary access pattern
-                // For now, we just consume the private key and the public key remains
-                // This is a design limitation that should be addressed if this pattern is common
-                // Related test: ConsumeKeyPairById_ShouldDocumentBug_PublicKeyNotRemoved (currently skipped)
+                // Remove the public key from the bundle as well
+                _bundleWithPrivates.Bundle.RemoveOneTimePreKey(id);
 
                 result = (publicKey, privateKey);
-                remainingCount = _bundleWithPrivates.OneTimePreKeyPrivates.Count;
+                remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeyCount;
                 wasLastKey = remainingCount == 0;
 
                 // Check if we should fire the low key event (only once when threshold is first crossed)

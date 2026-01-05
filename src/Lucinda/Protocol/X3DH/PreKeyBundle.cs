@@ -116,8 +116,8 @@ namespace Lucinda.Protocol.X3DH
         /// <remarks>
         /// <para>
         /// <b>Performance Note:</b> This property creates a deep copy of all byte arrays on every access.
-        /// For performance-sensitive scenarios, cache the result or use <see cref="GetOneTimePreKey(int)"/>
-        /// to retrieve individual keys.
+        /// For performance-sensitive scenarios, use <see cref="OneTimePreKeyCount"/> for count,
+        /// <see cref="GetOneTimePreKey(int)"/> for individual keys, or cache the result.
         /// </para>
         /// <para>
         /// The returned dictionary contains clones of the internal byte arrays, so modifications
@@ -161,6 +161,22 @@ namespace Lucinda.Protocol.X3DH
         public bool HasOneTimePreKey => _oneTimePreKeys.Count > 0;
 
         /// <summary>
+        /// Gets the number of one-time pre-keys available without creating a copy.
+        /// </summary>
+        /// <value>The count of available one-time pre-keys.</value>
+        /// <remarks>
+        /// <para>
+        /// Unlike accessing <see cref="OneTimePreKeys"/>.Count which creates a deep copy,
+        /// this property directly returns the internal count with O(1) complexity.
+        /// </para>
+        /// <para>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
+        /// </para>
+        /// </remarks>
+        public int OneTimePreKeyCount => _oneTimePreKeys.Count;
+
+        /// <summary>
         /// Gets a specific one-time pre-key public key by ID.
         /// </summary>
         /// <param name="id">The one-time pre-key ID.</param>
@@ -168,6 +184,27 @@ namespace Lucinda.Protocol.X3DH
         public byte[]? GetOneTimePreKey(int id)
         {
             return _oneTimePreKeys.TryGetValue(id, out byte[]? key) ? (byte[])key.Clone() : null;
+        }
+
+        /// <summary>
+        /// Removes a one-time pre-key by its ID.
+        /// </summary>
+        /// <param name="id">The one-time pre-key ID to remove.</param>
+        /// <returns><c>true</c> if the key was found and removed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is useful for server-side scenarios where a specific key needs to be
+        /// removed after allocation to a client.
+        /// </para>
+        /// <para>
+        /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
+        /// this method concurrently, race conditions may occur. Use external synchronization
+        /// (e.g., locking) when accessing from multiple threads.
+        /// </para>
+        /// </remarks>
+        public bool RemoveOneTimePreKey(int id)
+        {
+            return _oneTimePreKeys.Remove(id);
         }
 
         /// <summary>
