@@ -39,6 +39,12 @@ namespace Lucinda.Protocol.X3DH
         Dictionary<int, byte[]>? oneTimePreKeys = null)
     {
         /// <summary>
+        /// Gets the dictionary of one-time pre-key public keys (OPK), keyed by ID.
+        /// </summary>
+        /// <value>The one-time pre-keys dictionary.</value>
+        private readonly Dictionary<int, byte[]> _oneTimePreKeys = oneTimePreKeys ?? [];
+
+        /// <summary>
         /// Gets the long-term identity public key (IK).
         /// </summary>
         /// <value>The identity public key bytes.</value>
@@ -63,16 +69,16 @@ namespace Lucinda.Protocol.X3DH
         public int SignedPreKeyId { get; } = signedPreKeyId;
 
         /// <summary>
-        /// Gets the dictionary of one-time pre-key public keys (OPK), keyed by ID.
+        /// Gets a read-only view of the one-time pre-key public keys (OPK), keyed by ID.
         /// </summary>
-        /// <value>The one-time pre-keys dictionary.</value>
-        public Dictionary<int, byte[]> OneTimePreKeys { get; } = oneTimePreKeys ?? [];
+        /// <value>The one-time pre-keys as a read-only dictionary.</value>
+        public IReadOnlyDictionary<int, byte[]> OneTimePreKeys => _oneTimePreKeys;
 
         /// <summary>
         /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
         /// <value><c>true</c> if one or more one-time pre-keys are present; otherwise, <c>false</c>.</value>
-        public bool HasOneTimePreKey => OneTimePreKeys.Count > 0;
+        public bool HasOneTimePreKey => _oneTimePreKeys.Count > 0;
 
         /// <summary>
         /// Gets a specific one-time pre-key public key by ID.
@@ -81,7 +87,7 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>The one-time pre-key public key bytes, or null if not found.</returns>
         public byte[]? GetOneTimePreKey(int id)
         {
-            return OneTimePreKeys.TryGetValue(id, out byte[]? key) ? key : null;
+            return _oneTimePreKeys.TryGetValue(id, out byte[]? key) ? key : null;
         }
 
         /// <summary>
@@ -96,13 +102,14 @@ namespace Lucinda.Protocol.X3DH
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
         {
-            var first = OneTimePreKeys.FirstOrDefault();
-            if (first.Value != null)
+            if (_oneTimePreKeys.Count == 0)
             {
-                OneTimePreKeys.Remove(first.Key);
-                return (first.Key, first.Value);
+                return null;
             }
-            return null;
+
+            KeyValuePair<int, byte[]> first = _oneTimePreKeys.First();
+            _oneTimePreKeys.Remove(first.Key);
+            return (first.Key, first.Value);
         }
 
         /// <summary>
@@ -110,14 +117,36 @@ namespace Lucinda.Protocol.X3DH
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The first one-time pre-key ID, or null if none available.</value>
-        public int? OneTimePreKeyId => OneTimePreKeys.Count > 0 ? OneTimePreKeys.Keys.First() : null;
+        public int? OneTimePreKeyId
+        {
+            get
+            {
+                if (_oneTimePreKeys.Count == 0)
+                {
+                    return null;
+                }
+
+                return _oneTimePreKeys.First().Key;
+            }
+        }
 
         /// <summary>
         /// Gets the first available one-time pre-key, if any.
         /// This property provides backward compatibility.
         /// </summary>
         /// <value>The first one-time pre-key bytes, or null if none available.</value>
-        public byte[]? OneTimePreKey => OneTimePreKeys.Count > 0 ? OneTimePreKeys.Values.First() : null;
+        public byte[]? OneTimePreKey
+        {
+            get
+            {
+                if (_oneTimePreKeys.Count == 0)
+                {
+                    return null;
+                }
+
+                return _oneTimePreKeys.First().Value;
+            }
+        }
     }
 
     /// <summary>
