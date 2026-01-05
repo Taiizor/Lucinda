@@ -101,7 +101,12 @@ namespace Lucinda.Protocol.X3DH
         /// Gets the identifier for the signed pre-key.
         /// </summary>
         /// <value>The signed pre-key ID.</value>
-        public int SignedPreKeyId { get; } = signedPreKeyId;
+        public int SignedPreKeyId { get; } =
+            signedPreKeyId > 0
+                ? signedPreKeyId
+                : throw new ArgumentOutOfRangeException(
+                    nameof(signedPreKeyId),
+                    "Signed pre-key ID must be a positive integer.");
 
         /// <summary>
         /// Gets a read-only view of the one-time pre-key public keys (OPK), keyed by ID.
