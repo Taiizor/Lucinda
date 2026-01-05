@@ -134,6 +134,7 @@ namespace Lucinda.Protocol.X3DH
             (int Id, byte[] PublicKey, byte[] PrivateKey)? result = null;
             int remainingCount;
             bool wasLastKey = false;
+            bool shouldFireLowKeyEvent = false;
 
             lock (_lock)
             {
@@ -154,12 +155,8 @@ namespace Lucinda.Protocol.X3DH
                 result = (consumed.Value.Id, consumed.Value.Key, privateKey);
                 remainingCount = _bundleWithPrivates.Bundle.OneTimePreKeys.Count;
                 wasLastKey = remainingCount == 0;
-            }
 
-            // Fire events outside the lock to prevent deadlocks
-            bool shouldFireLowKeyEvent = false;
-            lock (_lock)
-            {
+                // Check if we should fire the low key event (only once when threshold is first crossed)
                 if (!_lowKeyEventFired && remainingCount <= LowKeyThreshold && remainingCount > 0)
                 {
                     _lowKeyEventFired = true;
@@ -167,6 +164,7 @@ namespace Lucinda.Protocol.X3DH
                 }
             }
 
+            // Fire events outside the lock to prevent deadlocks
             if (wasLastKey)
             {
                 KeysExhausted?.Invoke();
@@ -231,6 +229,7 @@ namespace Lucinda.Protocol.X3DH
             (byte[] PublicKey, byte[] PrivateKey)? result = null;
             int remainingCount;
             bool wasLastKey = false;
+            bool shouldFireLowKeyEvent = false;
 
             lock (_lock)
             {
@@ -255,12 +254,8 @@ namespace Lucinda.Protocol.X3DH
                 result = (publicKey, privateKey);
                 remainingCount = _bundleWithPrivates.OneTimePreKeyPrivates.Count;
                 wasLastKey = remainingCount == 0;
-            }
 
-            // Fire events outside the lock
-            bool shouldFireLowKeyEvent = false;
-            lock (_lock)
-            {
+                // Check if we should fire the low key event (only once when threshold is first crossed)
                 if (!_lowKeyEventFired && remainingCount <= LowKeyThreshold && remainingCount > 0)
                 {
                     _lowKeyEventFired = true;
@@ -268,6 +263,7 @@ namespace Lucinda.Protocol.X3DH
                 }
             }
 
+            // Fire events outside the lock
             if (wasLastKey)
             {
                 KeysExhausted?.Invoke();
