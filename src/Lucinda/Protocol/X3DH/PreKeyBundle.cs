@@ -78,6 +78,11 @@ namespace Lucinda.Protocol.X3DH
         /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
         /// <value><c>true</c> if one or more one-time pre-keys are present; otherwise, <c>false</c>.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
         public bool HasOneTimePreKey => _oneTimePreKeys.Count > 0;
 
         /// <summary>
