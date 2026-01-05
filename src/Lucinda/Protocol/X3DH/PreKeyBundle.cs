@@ -88,6 +88,11 @@ namespace Lucinda.Protocol.X3DH
         /// Consumes (removes and returns) the first available one-time pre-key.
         /// This method is useful for server-side key distribution simulation.
         /// </summary>
+        /// <remarks>
+        /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
+        /// this method concurrently, race conditions may occur. Use external synchronization
+        /// (e.g., locking) when accessing from multiple threads.
+        /// </remarks>
         /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
         public (int Id, byte[] Key)? ConsumeOneTimePreKey()
         {
