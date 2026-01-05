@@ -124,7 +124,7 @@ namespace Lucinda.Protocol.X3DH
 
             KeyValuePair<int, byte[]> first = enumerator.Current;
             _oneTimePreKeys.Remove(first.Key);
-            return (first.Key, first.Value);
+            return (first.Key, (byte[])first.Value.Clone());
         }
 
         /// <summary>
