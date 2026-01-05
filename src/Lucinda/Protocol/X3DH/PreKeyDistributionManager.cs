@@ -228,11 +228,12 @@ namespace Lucinda.Protocol.X3DH
                     return null;
                 }
 
-                // Note: We need to remove the public key from the bundle too
+                // TODO: Bug - We need to remove the public key from the bundle too
                 // Since PreKeyBundle doesn't have a RemoveOneTimePreKey method,
                 // we consume by ID using the internal dictionary access pattern
                 // For now, we just consume the private key and the public key remains
                 // This is a design limitation that should be addressed if this pattern is common
+                // Related test: ConsumeKeyPairById_ShouldDocumentBug_PublicKeyNotRemoved (currently skipped)
 
                 result = (publicKey, privateKey);
                 remainingCount = _bundleWithPrivates.OneTimePreKeyPrivates.Count;
