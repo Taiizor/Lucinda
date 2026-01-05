@@ -188,8 +188,7 @@ namespace Lucinda.Protocol.X3DH
                     return null;
                 }
 
-                // Return clones for safety
-                return ((byte[])publicKey.Clone(), (byte[])privateKey.Clone());
+                return (publicKey, privateKey);
             }
         }
 
