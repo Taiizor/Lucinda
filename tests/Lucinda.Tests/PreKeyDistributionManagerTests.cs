@@ -242,4 +242,180 @@ public sealed class PreKeyDistributionManagerTests
         consumedIds.Distinct().Should().HaveCount(100);
         manager.RemainingKeyCount.Should().Be(0);
     }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldReturnKeyPair_WhenKeyExists()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+
+        // Assert
+        consumed.Should().NotBeNull();
+        consumed!.Value.PublicKey.Should().NotBeNullOrEmpty();
+        consumed.Value.PrivateKey.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldReturnNull_WhenKeyDoesNotExist()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(999);
+
+        // Assert
+        consumed.Should().BeNull();
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldRemovePrivateKey_ButNotPublicKey()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+        int initialPublicKeyCount = manager.Bundle.OneTimePreKeys.Count;
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(2);
+
+        // Assert - This test documents the current bug
+        consumed.Should().NotBeNull();
+
+        // Bug: The private key is removed but the public key remains in the bundle
+        manager.GetKeyPair(2).Should().BeNull("private key should be removed");
+        manager.Bundle.GetOneTimePreKey(2).Should().NotBeNull("BUG: public key should be removed but isn't");
+        manager.Bundle.OneTimePreKeys.Count.Should().Be(initialPublicKeyCount, "BUG: public key count should decrease but doesn't");
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldFireKeysRunningLow_WhenBelowThreshold()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3, 4, 5]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value)
+        {
+            LowKeyThreshold = 3
+        };
+
+        int? reportedCount = null;
+        manager.KeysRunningLow += count => reportedCount = count;
+
+        // Act - Consume keys to hit threshold
+        manager.ConsumeKeyPairById(1); // 4 private keys remaining
+        manager.ConsumeKeyPairById(2); // 3 private keys remaining - should fire
+
+        // Assert
+        reportedCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldFireKeysExhausted_WhenLastKeyConsumed()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        bool exhaustedFired = false;
+        manager.KeysExhausted += () => exhaustedFired = true;
+
+        // Act
+        manager.ConsumeKeyPairById(1);
+
+        // Assert
+        exhaustedFired.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldNotReturnSameKeyTwice()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, [1, 2, 3]);
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+
+        // Act
+        (byte[] PublicKey, byte[] PrivateKey)? first = manager.ConsumeKeyPairById(2);
+        (byte[] PublicKey, byte[] PrivateKey)? second = manager.ConsumeKeyPairById(2);
+
+        // Assert
+        first.Should().NotBeNull();
+        second.Should().BeNull("key should not be returned twice");
+    }
+
+    [Fact]
+    public void ConsumeKeyPairById_ShouldBeThreadSafe()
+    {
+        // Arrange
+        using X3DHKeyAgreement x3dh = new();
+        using EcdhKeyExchange ecdh = new();
+
+        CryptoResult<AsymmetricKeyPair> identity = ecdh.GenerateKeyPair();
+        CryptoResult<PreKeyBundleWithPrivateKeys> bundleResult = x3dh.GeneratePreKeyBundle(
+            identity.Value, 1, Enumerable.Range(1, 100).ToArray());
+
+        PreKeyDistributionManager manager = new(bundleResult.Value);
+        ConcurrentBag<int> successfulConsumptions = [];
+        ConcurrentBag<int> failedConsumptions = [];
+
+        // Act - Multiple threads try to consume the same keys
+        Parallel.For(0, 100, i =>
+        {
+            int keyId = (i % 50) + 1; // Try to consume keys 1-50, with duplicates
+            (byte[] PublicKey, byte[] PrivateKey)? consumed = manager.ConsumeKeyPairById(keyId);
+            if (consumed.HasValue)
+            {
+                successfulConsumptions.Add(keyId);
+            }
+            else
+            {
+                failedConsumptions.Add(keyId);
+            }
+        });
+
+        // Assert - Each key should only be consumed once
+        successfulConsumptions.Should().HaveCount(50, "only 50 unique keys should be consumed");
+        successfulConsumptions.Distinct().Should().HaveCount(50, "each key should only be consumed once");
+        failedConsumptions.Should().HaveCount(50, "50 attempts should fail due to duplicate consumption attempts");
+    }
 }
