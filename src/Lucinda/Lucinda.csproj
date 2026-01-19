@@ -12,7 +12,7 @@
 
     <PropertyGroup>
         <ApplicationIcon>Resources\Lucinda.ico</ApplicationIcon>
-        <Version>1.0.7</Version>
+        <Version>1.0.8</Version>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>Lucinda</Title>
