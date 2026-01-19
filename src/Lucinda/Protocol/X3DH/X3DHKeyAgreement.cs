@@ -319,8 +319,7 @@ namespace Lucinda.Protocol.X3DH
 
                 // Generate one-time pre-keys if requested
                 Dictionary<int, byte[]> oneTimePreKeyPrivates = [];
-                byte[]? firstOneTimePreKey = null;
-                int? firstOneTimePreKeyId = null;
+                Dictionary<int, byte[]> oneTimePreKeyPublics = [];
 
                 if (oneTimePreKeyIds != null && oneTimePreKeyIds.Length > 0)
                 {
@@ -334,13 +333,7 @@ namespace Lucinda.Protocol.X3DH
                         }
 
                         oneTimePreKeyPrivates[id] = otpkResult.Value.PrivateKey;
-
-                        // Store the first one for the bundle
-                        if (firstOneTimePreKey == null)
-                        {
-                            firstOneTimePreKey = otpkResult.Value.PublicKey;
-                            firstOneTimePreKeyId = id;
-                        }
+                        oneTimePreKeyPublics[id] = otpkResult.Value.PublicKey;
                     }
                 }
 
@@ -349,8 +342,7 @@ namespace Lucinda.Protocol.X3DH
                     signedPreKeyResult.Value.PublicKey,
                     signatureResult.Value,
                     signedPreKeyId,
-                    firstOneTimePreKey,
-                    firstOneTimePreKeyId);
+                    oneTimePreKeyPublics);
 
                 PreKeyBundleWithPrivateKeys result = new(
                     bundle,

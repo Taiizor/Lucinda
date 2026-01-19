@@ -30,16 +30,55 @@ namespace Lucinda.Protocol.X3DH
     /// <param name="signedPreKey">The signed pre-key public key.</param>
     /// <param name="signedPreKeySignature">The signature over the signed pre-key.</param>
     /// <param name="signedPreKeyId">The identifier for the signed pre-key.</param>
-    /// <param name="oneTimePreKey">Optional one-time pre-key public key.</param>
-    /// <param name="oneTimePreKeyId">Optional identifier for the one-time pre-key.</param>
+    /// <param name="oneTimePreKeys">Dictionary of one-time pre-key public keys by ID.</param>
     public sealed class PreKeyBundle(
         byte[] identityKey,
         byte[] signedPreKey,
         byte[] signedPreKeySignature,
         int signedPreKeyId,
-        byte[]? oneTimePreKey = null,
-        int? oneTimePreKeyId = null)
+        IDictionary<int, byte[]>? oneTimePreKeys = null)
     {
+        /// <summary>
+        /// Internal sorted dictionary for one-time pre-keys.
+        /// Using SortedDictionary ensures O(log n) operations and deterministic ordering.
+        /// </summary>
+        private readonly SortedDictionary<int, byte[]> _oneTimePreKeys = ValidateOneTimePreKeys(oneTimePreKeys);
+
+        private static SortedDictionary<int, byte[]> ValidateOneTimePreKeys(IDictionary<int, byte[]>? oneTimePreKeys)
+        {
+            if (oneTimePreKeys is null || oneTimePreKeys.Count == 0)
+            {
+                return [];
+            }
+
+            SortedDictionary<int, byte[]> validated = [];
+
+            foreach (KeyValuePair<int, byte[]> kvp in oneTimePreKeys)
+            {
+                if (kvp.Key <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(oneTimePreKeys),
+                        $"One-time pre-key ID must be a positive integer. Invalid ID: {kvp.Key}.");
+                }
+
+                byte[] value = kvp.Value ?? throw new ArgumentException(
+                    "One-time pre-key value cannot be null.",
+                    nameof(oneTimePreKeys));
+
+                if (value.Length == 0)
+                {
+                    throw new ArgumentException(
+                        "One-time pre-key value cannot be an empty byte array.",
+                        nameof(oneTimePreKeys));
+                }
+
+                validated.Add(kvp.Key, (byte[])value.Clone());
+            }
+
+            return validated;
+        }
+
         /// <summary>
         /// Gets the long-term identity public key (IK).
         /// </summary>
@@ -62,25 +101,186 @@ namespace Lucinda.Protocol.X3DH
         /// Gets the identifier for the signed pre-key.
         /// </summary>
         /// <value>The signed pre-key ID.</value>
-        public int SignedPreKeyId { get; } = signedPreKeyId;
+        public int SignedPreKeyId { get; } =
+            signedPreKeyId > 0
+                ? signedPreKeyId
+                : throw new ArgumentOutOfRangeException(
+                    nameof(signedPreKeyId),
+                    "Signed pre-key ID must be a positive integer.");
 
         /// <summary>
-        /// Gets the one-time pre-key public key (OPK), if available.
+        /// Gets a read-only view of the one-time pre-key public keys (OPK), keyed by ID.
+        /// Keys are sorted by ID in ascending order.
         /// </summary>
-        /// <value>The one-time pre-key public key bytes, or null if not available.</value>
-        public byte[]? OneTimePreKey { get; } = oneTimePreKey;
+        /// <value>The one-time pre-keys as a read-only dictionary.</value>
+        /// <remarks>
+        /// <para>
+        /// <b>Performance Note:</b> This property creates a deep copy of all byte arrays on every access.
+        /// For performance-sensitive scenarios, use <see cref="OneTimePreKeysCount"/> for count,
+        /// <see cref="GetOneTimePreKey(int)"/> for individual keys, or cache the result.
+        /// </para>
+        /// <para>
+        /// The returned dictionary contains clones of the internal byte arrays, so modifications
+        /// to the returned values do not affect the internal state.
+        /// </para>
+        /// <para>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
+        /// </para>
+        /// </remarks>
+        public IReadOnlyDictionary<int, byte[]> OneTimePreKeys
+        {
+            get
+            {
+                if (_oneTimePreKeys.Count == 0)
+                {
+                    return new Dictionary<int, byte[]>(0);
+                }
+
+                Dictionary<int, byte[]> copy = new(_oneTimePreKeys.Count);
+                foreach (KeyValuePair<int, byte[]> kvp in _oneTimePreKeys)
+                {
+                    byte[] valueCopy = new byte[kvp.Value.Length];
+                    Array.Copy(kvp.Value, valueCopy, kvp.Value.Length);
+                    copy.Add(kvp.Key, valueCopy);
+                }
+
+                return copy;
+            }
+        }
 
         /// <summary>
-        /// Gets the identifier for the one-time pre-key, if available.
+        /// Gets a value indicating whether this bundle contains any one-time pre-keys.
         /// </summary>
-        /// <value>The one-time pre-key ID, or null if not available.</value>
-        public int? OneTimePreKeyId { get; } = oneTimePreKeyId;
+        /// <value><c>true</c> if one or more one-time pre-keys are present; otherwise, <c>false</c>.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
+        public bool HasOneTimePreKey => _oneTimePreKeys.Count > 0;
 
         /// <summary>
-        /// Gets a value indicating whether this bundle contains a one-time pre-key.
+        /// Gets the number of one-time pre-keys available without creating a copy.
         /// </summary>
-        /// <value><c>true</c> if a one-time pre-key is present; otherwise, <c>false</c>.</value>
-        public bool HasOneTimePreKey => OneTimePreKey != null && OneTimePreKeyId.HasValue;
+        /// <value>The count of available one-time pre-keys.</value>
+        /// <remarks>
+        /// <para>
+        /// Unlike accessing <see cref="OneTimePreKeys"/>.Count which creates a deep copy,
+        /// this property directly returns the internal count with O(1) complexity.
+        /// </para>
+        /// <para>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization.
+        /// </para>
+        /// </remarks>
+        public int OneTimePreKeysCount => _oneTimePreKeys.Count;
+
+        /// <summary>
+        /// Gets a specific one-time pre-key public key by ID.
+        /// </summary>
+        /// <param name="id">The one-time pre-key ID.</param>
+        /// <returns>The one-time pre-key public key bytes, or null if not found.</returns>
+        public byte[]? GetOneTimePreKey(int id)
+        {
+            return _oneTimePreKeys.TryGetValue(id, out byte[]? key) ? (byte[])key.Clone() : null;
+        }
+
+        /// <summary>
+        /// Removes a one-time pre-key by its ID.
+        /// </summary>
+        /// <param name="id">The one-time pre-key ID to remove.</param>
+        /// <returns><c>true</c> if the key was found and removed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is useful for server-side scenarios where a specific key needs to be
+        /// removed after allocation to a client.
+        /// </para>
+        /// <para>
+        /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
+        /// this method concurrently, race conditions may occur. Use external synchronization
+        /// (e.g., locking) when accessing from multiple threads.
+        /// </para>
+        /// </remarks>
+        public bool RemoveOneTimePreKey(int id)
+        {
+            return _oneTimePreKeys.Remove(id);
+        }
+
+        /// <summary>
+        /// Consumes (removes and returns) the one-time pre-key with the smallest ID.
+        /// This method is useful for server-side key distribution simulation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The key with the smallest ID is always selected. Since a SortedDictionary is used internally,
+        /// the first element is guaranteed to have the smallest key. This implementation uses a single
+        /// enumerator pass for efficiency.
+        /// </para>
+        /// <para>
+        /// <b>Warning:</b> This method is not thread-safe. If multiple threads access
+        /// this method concurrently, race conditions may occur. Use external synchronization
+        /// (e.g., locking) when accessing from multiple threads.
+        /// </para>
+        /// <para>
+        /// <b>Design Note:</b> This method is provided for convenience in testing and
+        /// single-threaded scenarios. In production server implementations, key consumption
+        /// and distribution should be managed by a dedicated service with appropriate
+        /// concurrency controls (e.g., database-level locking, distributed locks).
+        /// </para>
+        /// </remarks>
+        /// <returns>A tuple of (ID, PublicKey), or null if no keys are available.</returns>
+        public (int Id, byte[] Key)? ConsumeOneTimePreKey()
+        {
+            // Use enumerator for efficient single-pass access
+            using IEnumerator<KeyValuePair<int, byte[]>> enumerator = _oneTimePreKeys.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                return null;
+            }
+
+            KeyValuePair<int, byte[]> first = enumerator.Current;
+            _oneTimePreKeys.Remove(first.Key);
+            return (first.Key, (byte[])first.Value.Clone());
+        }
+
+        /// <summary>
+        /// Gets the smallest available one-time pre-key ID, if any.
+        /// This property provides backward compatibility.
+        /// </summary>
+        /// <value>The smallest one-time pre-key ID, or null if none available.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
+        public int? OneTimePreKeyId
+        {
+            get
+            {
+                using IEnumerator<int> enumerator = _oneTimePreKeys.Keys.GetEnumerator();
+                return enumerator.MoveNext() ? enumerator.Current : null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the one-time pre-key with the smallest ID, if any.
+        /// This property provides backward compatibility.
+        /// </summary>
+        /// <value>The one-time pre-key bytes with smallest ID, or null if none available.</value>
+        /// <remarks>
+        /// This property is not thread-safe. If the one-time pre-key collection may be modified concurrently
+        /// (for example, by <c>ConsumeOneTimePreKey()</c>), callers must provide their own synchronization
+        /// around all accesses to one-time pre-keys, including this property.
+        /// </remarks>
+        public byte[]? OneTimePreKey
+        {
+            get
+            {
+                using IEnumerator<byte[]> enumerator = _oneTimePreKeys.Values.GetEnumerator();
+                return enumerator.MoveNext() ? (byte[])enumerator.Current.Clone() : null;
+            }
+        }
     }
 
     /// <summary>
