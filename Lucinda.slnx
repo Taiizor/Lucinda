@@ -1,0 +1,31 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Lucinda.Benchmarks/Lucinda.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Lucinda.Samples.SecureMessaging/Lucinda.Samples.SecureMessaging.csproj" />
+    <Project Path="samples/Lucinda.Samples.SignalProtocol/Lucinda.Samples.SignalProtocol.csproj" />
+    <Project Path="samples/Lucinda.Samples/Lucinda.Samples.csproj" />
+  </Folder>
+  <Folder Name="/samples/Group Messaging/">
+    <Project Path="samples/Lucinda.Samples.GroupMessaging.Hybrid/Lucinda.Samples.GroupMessaging.Hybrid.csproj" />
+    <Project Path="samples/Lucinda.Samples.GroupMessaging.PerRecipient/Lucinda.Samples.GroupMessaging.PerRecipient.csproj" />
+    <Project Path="samples/Lucinda.Samples.GroupMessaging.SenderKeys/Lucinda.Samples.GroupMessaging.SenderKeys.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="global.json" />
+    <File Path="NuGet.Config" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Lucinda/Lucinda.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lucinda.Tests/Lucinda.Tests.csproj" />
+  </Folder>
+</Solution>

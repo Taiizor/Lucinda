@@ -5,108 +5,108 @@ labels: ["enhancement", "triage"]
 assignees: []
 
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## Feature Request
-        Thank you for taking the time to suggest a feature! Please provide as much detail as possible.
+    - type: markdown
+      attributes:
+          value: |
+              ## Feature Request
+              Thank you for taking the time to suggest a feature! Please provide as much detail as possible.
 
-  - type: textarea
-    id: problem
-    attributes:
-      label: Problem Statement
-      description: Is your feature request related to a problem? Please describe.
-      placeholder: A clear description of what the problem is. Ex. I'm always frustrated when...
-    validations:
-      required: true
-
-  - type: textarea
-    id: solution
-    attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see.
-      placeholder: A clear description of what you want to happen.
-    validations:
-      required: true
-
-  - type: textarea
-    id: api-design
-    attributes:
-      label: API Design (Optional)
-      description: If you have ideas about how the API should look, please share them.
-      render: csharp
-      placeholder: |
-        // Example of how the feature might be used:
-        var e2ee = new EndToEndEncryption(new EndToEndEncryptionOptions
-        {
-            // New option here
-        });
-    validations:
-      required: false
-
-  - type: dropdown
-    id: category
-    attributes:
-      label: Feature Category
-      description: What category does this feature belong to?
-      options:
-        - New Encryption Algorithm
-        - New Key Exchange Protocol
-        - New Signature Algorithm
-        - Key Management
-        - Performance Improvement
-        - API Enhancement
-        - Platform Support
-        - Documentation
-        - Tooling/Build
-        - Other
-    validations:
-      required: true
-
-  - type: dropdown
-    id: priority
-    attributes:
-      label: Priority
-      description: How important is this feature to you?
-      options:
-        - Nice to have
-        - Important
-        - Critical for my use case
-    validations:
-      required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Describe any alternative solutions or features you've considered.
-      placeholder: What other approaches have you thought about?
-    validations:
-      required: false
-
-  - type: textarea
-    id: use-case
-    attributes:
-      label: Use Case
-      description: Describe your use case that would benefit from this feature.
-      placeholder: How would you use this feature in your project?
-    validations:
-      required: false
-
-  - type: textarea
-    id: additional
-    attributes:
-      label: Additional Context
-      description: Add any other context, screenshots, or references about the feature request here.
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Checklist
-      options:
-        - label: I have searched existing issues/discussions to ensure this feature hasn't been requested before
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem Statement
+          description: Is your feature request related to a problem? Please describe.
+          placeholder: A clear description of what the problem is. Ex. I'm always frustrated when...
+      validations:
           required: true
-        - label: I have read the documentation to confirm this feature doesn't already exist
+
+    - type: textarea
+      id: solution
+      attributes:
+          label: Proposed Solution
+          description: Describe the solution you'd like to see.
+          placeholder: A clear description of what you want to happen.
+      validations:
           required: true
+
+    - type: textarea
+      id: api-design
+      attributes:
+          label: API Design (Optional)
+          description: If you have ideas about how the API should look, please share them.
+          render: csharp
+          placeholder: |
+              // Example of how the feature might be used:
+              var e2ee = new EndToEndEncryption(new EndToEndEncryptionOptions
+              {
+                  // New option here
+              });
+      validations:
+          required: false
+
+    - type: dropdown
+      id: category
+      attributes:
+          label: Feature Category
+          description: What category does this feature belong to?
+          options:
+              - New Encryption Algorithm
+              - New Key Exchange Protocol
+              - New Signature Algorithm
+              - Key Management
+              - Performance Improvement
+              - API Enhancement
+              - Platform Support
+              - Documentation
+              - Tooling/Build
+              - Other
+      validations:
+          required: true
+
+    - type: dropdown
+      id: priority
+      attributes:
+          label: Priority
+          description: How important is this feature to you?
+          options:
+              - Nice to have
+              - Important
+              - Critical for my use case
+      validations:
+          required: true
+
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives Considered
+          description: Describe any alternative solutions or features you've considered.
+          placeholder: What other approaches have you thought about?
+      validations:
+          required: false
+
+    - type: textarea
+      id: use-case
+      attributes:
+          label: Use Case
+          description: Describe your use case that would benefit from this feature.
+          placeholder: How would you use this feature in your project?
+      validations:
+          required: false
+
+    - type: textarea
+      id: additional
+      attributes:
+          label: Additional Context
+          description: Add any other context, screenshots, or references about the feature request here.
+      validations:
+          required: false
+
+    - type: checkboxes
+      id: checklist
+      attributes:
+          label: Checklist
+          options:
+              - label: I have searched existing issues/discussions to ensure this feature hasn't been requested before
+                required: true
+              - label: I have read the documentation to confirm this feature doesn't already exist
+                required: true

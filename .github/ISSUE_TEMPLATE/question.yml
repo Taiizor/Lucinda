@@ -5,94 +5,94 @@ labels: ["question"]
 assignees: []
 
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## Question
-        Before asking, please check:
-        - [README](https://github.com/Taiizor/Lucinda#readme) for basic usage
-        - [Sample projects](https://github.com/Taiizor/Lucinda/tree/develop/samples) for examples
-        - [Existing issues](https://github.com/Taiizor/Lucinda/issues) for similar questions
+    - type: markdown
+      attributes:
+          value: |
+              ## Question
+              Before asking, please check:
+              - [README](https://github.com/Taiizor/Lucinda#readme) for basic usage
+              - [Sample projects](https://github.com/Taiizor/Lucinda/tree/develop/samples) for examples
+              - [Existing issues](https://github.com/Taiizor/Lucinda/issues) for similar questions
 
-  - type: dropdown
-    id: topic
-    attributes:
-      label: Question Topic
-      description: What is your question about?
-      options:
-        - Getting Started / Installation
-        - Symmetric Encryption (AES)
-        - Asymmetric Encryption (RSA)
-        - Hybrid Encryption
-        - Key Derivation (PBKDF2/HKDF)
-        - Key Exchange (ECDH)
-        - Digital Signatures
-        - Key Storage
-        - End-to-End Encryption Implementation
-        - Group Messaging
-        - Performance/Benchmarks
-        - Platform Compatibility
-        - Best Practices
-        - Other
-    validations:
-      required: true
-
-  - type: textarea
-    id: question
-    attributes:
-      label: Your Question
-      description: Please describe your question in detail.
-      placeholder: What would you like to know?
-    validations:
-      required: true
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Context
-      description: Provide any relevant context about what you're trying to achieve.
-      placeholder: |
-        - What are you trying to build?
-        - What have you tried so far?
-    validations:
-      required: false
-
-  - type: textarea
-    id: code
-    attributes:
-      label: Code Sample (if applicable)
-      description: If your question is related to code, please share a sample.
-      render: csharp
-      placeholder: |
-        using Lucinda;
-        
-        // Your code here...
-    validations:
-      required: false
-
-  - type: dropdown
-    id: target-framework
-    attributes:
-      label: Target Framework (if applicable)
-      description: Which .NET target framework are you using?
-      options:
-        - Not applicable
-        - .NET 10.0
-        - .NET 9.0
-        - .NET 8.0
-        - .NET 7.0
-        - .NET 6.0
-        - .NET Standard 2.1
-        - .NET Standard 2.0
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Checklist
-      options:
-        - label: I have read the README and checked the sample projects
+    - type: dropdown
+      id: topic
+      attributes:
+          label: Question Topic
+          description: What is your question about?
+          options:
+              - Getting Started / Installation
+              - Symmetric Encryption (AES)
+              - Asymmetric Encryption (RSA)
+              - Hybrid Encryption
+              - Key Derivation (PBKDF2/HKDF)
+              - Key Exchange (ECDH)
+              - Digital Signatures
+              - Key Storage
+              - End-to-End Encryption Implementation
+              - Group Messaging
+              - Performance/Benchmarks
+              - Platform Compatibility
+              - Best Practices
+              - Other
+      validations:
           required: true
-        - label: I have searched existing issues for similar questions
+
+    - type: textarea
+      id: question
+      attributes:
+          label: Your Question
+          description: Please describe your question in detail.
+          placeholder: What would you like to know?
+      validations:
           required: true
+
+    - type: textarea
+      id: context
+      attributes:
+          label: Context
+          description: Provide any relevant context about what you're trying to achieve.
+          placeholder: |
+              - What are you trying to build?
+              - What have you tried so far?
+      validations:
+          required: false
+
+    - type: textarea
+      id: code
+      attributes:
+          label: Code Sample (if applicable)
+          description: If your question is related to code, please share a sample.
+          render: csharp
+          placeholder: |
+              using Lucinda;
+
+              // Your code here...
+      validations:
+          required: false
+
+    - type: dropdown
+      id: target-framework
+      attributes:
+          label: Target Framework (if applicable)
+          description: Which .NET target framework are you using?
+          options:
+              - Not applicable
+              - .NET 10.0
+              - .NET 9.0
+              - .NET 8.0
+              - .NET 7.0
+              - .NET 6.0
+              - .NET Standard 2.1
+              - .NET Standard 2.0
+      validations:
+          required: false
+
+    - type: checkboxes
+      id: checklist
+      attributes:
+          label: Checklist
+          options:
+              - label: I have read the README and checked the sample projects
+                required: true
+              - label: I have searched existing issues for similar questions
+                required: true
