@@ -86,7 +86,7 @@ Result Pattern: CryptoResult&lt;T&gt; for explicit error handling without except
     <!-- Source Link for debugging -->
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub">
-            <Version>10.0.102</Version>
+            <Version>10.0.103</Version>
             <PrivateAssets>All</PrivateAssets>
         </PackageReference>
     </ItemGroup>
