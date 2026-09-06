@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <LangVersion>preview</LangVersion>
         <IsTestProject>true</IsTestProject>
