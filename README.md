@@ -49,7 +49,7 @@ A comprehensive end-to-end encryption (E2EE) library for .NET, providing secure 
 |----------|---------|
 | .NET Standard | 2.0, 2.1 |
 | .NET Framework | 4.8, 4.8.1 |
-| .NET | 6.0, 7.0, 8.0, 9.0, 10.0 |
+| .NET | 6.0, 7.0, 8.0, 9.0, 10.0, 11.0 |
 
 > **Note:** Full functionality (RSA, ECDSA, ECDH, hybrid encryption) requires .NET Core 3.0+ or .NET 5.0+. Signal Protocol features (SecureMessaging, X3DH, Double Ratchet) require .NET 6.0+. On .NET Framework 4.8/4.8.1 and .NET Standard 2.0/2.1, only symmetric encryption (AES-GCM, AES-CBC), key derivation (PBKDF2, HKDF), and utility functions are available.
 

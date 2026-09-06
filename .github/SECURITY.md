@@ -14,6 +14,7 @@ Security updates are provided for all supported target frameworks:
 
 | Platform | Version | Status |
 |----------|---------|--------|
+| .NET | 11.0 | :white_check_mark: Supported |
 | .NET | 10.0 | :white_check_mark: Supported |
 | .NET | 9.0 | :white_check_mark: Supported |
 | .NET | 8.0 LTS | :white_check_mark: Supported |

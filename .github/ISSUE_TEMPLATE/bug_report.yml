@@ -91,6 +91,7 @@ body:
           label: Target Framework
           description: Which .NET target framework are you using?
           options:
+              - .NET 11.0
               - .NET 10.0
               - .NET 9.0
               - .NET 8.0
