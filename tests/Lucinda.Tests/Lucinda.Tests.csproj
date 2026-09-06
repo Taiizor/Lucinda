@@ -7,18 +7,18 @@
         <IsTestProject>true</IsTestProject>
         <AnalysisLevel>preview</AnalysisLevel>
         <ImplicitUsings>enable</ImplicitUsings>
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="xunit.v3" Version="4.0.0-pre.154" />
+        <PackageReference Include="xunit.v3" Version="4.0.0" />
         <PackageReference Include="FluentAssertions" Version="8.10.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
         <PackageReference Include="coverlet.collector" Version="10.0.1">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0-pre.5">
+        <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

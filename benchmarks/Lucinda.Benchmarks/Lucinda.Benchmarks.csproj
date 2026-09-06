@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Nullable>enable</Nullable>
@@ -6,7 +6,7 @@
         <LangVersion>preview</LangVersion>
         <AnalysisLevel>preview</AnalysisLevel>
         <ImplicitUsings>enable</ImplicitUsings>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <RootNamespace>Lucinda.Benchmarks</RootNamespace>
     </PropertyGroup>
 
@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.16.0-preview.1" />
     </ItemGroup>
 
 </Project>
